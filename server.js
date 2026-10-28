@@ -20,7 +20,11 @@ db.serialize(() => {
     )`);
     db.run(`CREATE TABLE IF NOT EXISTS groups (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, creator TEXT)`);
     db.run(`CREATE TABLE IF NOT EXISTS group_members (group_id INTEGER, username TEXT, PRIMARY KEY (group_id, username))`);
-    db.run(`CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY AUTOINCREMENT, sender TEXT, receiver TEXT, text TEXT, isGift INTEGER, timestamp TEXT)`);
+    // ДОБАВИЛИ КОЛОНКУ comment В ТАБЛИЦУ СООБЩЕНИЙ
+    db.run(`CREATE TABLE IF NOT EXISTS messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT, sender TEXT, receiver TEXT, 
+        text TEXT, isGift INTEGER, comment TEXT, timestamp TEXT
+    )`);
     db.run(`CREATE TABLE IF NOT EXISTS received_gifts (id INTEGER PRIMARY KEY AUTOINCREMENT, sender TEXT, receiver TEXT, gift_emoji TEXT, comment TEXT, timestamp TEXT)`);
     db.run(`CREATE TABLE IF NOT EXISTS promocodes (code TEXT UNIQUE, reward INTEGER, max_uses INTEGER, current_uses INTEGER DEFAULT 0)`);
     db.run(`CREATE TABLE IF NOT EXISTS blocks (blocker TEXT, blocked TEXT, PRIMARY KEY (blocker, blocked))`);
@@ -44,7 +48,7 @@ wss.on('connection', function connection(ws) {
                         if (err) ws.send(JSON.stringify({ type: 'auth_error', message: 'Ошибка сервера.' }));
                         else {
                             ws.send(JSON.stringify({ type: 'auth_success' }));
-                            broadcastAllUsers(); // <--- ВАЖНО: Рассылаем список всем, чтобы поиск работал сразу
+                            broadcastAllUsers();
                         }
                     });
                 });
@@ -85,7 +89,6 @@ wss.on('connection', function connection(ws) {
 
             if (data.type === 'admin_give_coins') {
                 if (ws.username !== 'revezzz') return ws.send(JSON.stringify({ type: 'error', message: 'У вас нет прав!' }));
-                
                 db.run(`UPDATE users SET coins = coins + ? WHERE username = ?`, [data.amount, data.target], () => {
                     db.get(`SELECT coins FROM users WHERE username = ?`, [data.target], (e, r) => {
                         ws.send(JSON.stringify({ type: 'admin_success', message: `Начислено ${data.amount} R пользователю ${data.target}` }));
@@ -160,6 +163,7 @@ wss.on('connection', function connection(ws) {
                 });
             }
             
+            // ИСПРАВЛЕНО: СОХРАНЯЕМ КОММЕНТАРИЙ В БАЗУ
             if (data.type === 'private' && data.isGift) {
                 db.get(`SELECT coins FROM users WHERE username = ?`, [ws.username], (err, row) => {
                     if (row.coins < data.giftPrice) return ws.send(JSON.stringify({ type: 'error', message: 'Недостаточно R-коинов!' }));
@@ -167,10 +171,14 @@ wss.on('connection', function connection(ws) {
                         if (block) return ws.send(JSON.stringify({ type: 'error', message: 'Вы заблокированы этим пользователем.' }));
                         db.run(`UPDATE users SET coins = coins - ? WHERE username = ?`, [data.giftPrice, ws.username], () => {
                             const time = new Date().toLocaleTimeString();
-                            db.run(`INSERT INTO messages (sender, receiver, text, isGift, timestamp) VALUES (?, ?, ?, 1, ?)`, [data.from, data.to, data.text, time]);
-                            db.run(`INSERT INTO received_gifts (sender, receiver, gift_emoji, comment, timestamp) VALUES (?, ?, ?, ?, ?)`, [data.from, data.to, data.text, data.comment, time]);
+                            const comment = data.comment || "";
+                            
+                            // ДОБАВИЛИ comment
+                            db.run(`INSERT INTO messages (sender, receiver, text, isGift, comment, timestamp) VALUES (?, ?, ?, 1, ?, ?)`, [data.from, data.to, data.text, comment, time]);
+                            db.run(`INSERT INTO received_gifts (sender, receiver, gift_emoji, comment, timestamp) VALUES (?, ?, ?, ?, ?)`, [data.from, data.to, data.text, comment, time]);
+                            
                             const recipientSocket = clients.get(data.to);
-                            if (recipientSocket) recipientSocket.send(JSON.stringify({ type: 'private', from: data.from, text: data.text, isGift: true, comment: data.comment, time: time }));
+                            if (recipientSocket) recipientSocket.send(JSON.stringify({ type: 'private', from: data.from, text: data.text, isGift: true, comment: comment, time: time }));
                             ws.send(JSON.stringify({ type: 'update_coins', coins: row.coins - data.giftPrice }));
                         });
                     });
