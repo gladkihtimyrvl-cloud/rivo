@@ -18,7 +18,6 @@
 
         /* ЛЕВАЯ ПАНЕЛЬ */
         #sidebar { width: 340px; background: var(--bg-panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 2; }
-        
         .sidebar-header { padding: 10px 15px; display: flex; align-items: center; justify-content: space-between; background: var(--bg-panel); }
         .menu-btn { cursor: pointer; font-size: 20px; color: var(--text-muted); padding: 5px; }
         .menu-btn:hover { color: var(--text-main); }
@@ -40,6 +39,8 @@
         .chat-bottom { display: flex; justify-content: space-between; align-items: center; }
         .chat-msg { font-size: 14px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
         .unread-badge { background: var(--accent); color: white; border-radius: 10px; padding: 2px 6px; font-size: 11px; font-weight: 600; }
+
+        .search-hint { text-align: center; color: var(--text-muted); font-size: 13px; margin-top: 20px; padding: 0 20px; }
 
         /* ПРАВАЯ ПАНЕЛЬ (ЧАТ) */
         #chat-area { flex: 1; display: flex; flex-direction: column; background: #0e1621 url('https://web.telegram.org/img/tg_bg_pattern.png') repeat; position: relative; }
@@ -116,23 +117,11 @@
             <div class="profile-avatar-big" id="view-avatar"></div>
             <h3 style="text-align:center; margin:0;" id="view-name"></h3>
             <p style="text-align:center; color:var(--text-muted); margin:5px 0 20px;" id="view-status"></p>
-            
-            <div class="profile-field">
-                <div class="profile-label">ID пользователя</div>
-                <div class="profile-value" id="view-id"></div>
-            </div>
-            <div class="profile-field">
-                <div class="profile-label">Имя пользователя</div>
-                <div class="profile-value" id="view-username"></div>
-            </div>
-            <div class="profile-field">
-                <div class="profile-label">О себе</div>
-                <div class="profile-value" id="view-bio"></div>
-            </div>
-            
+            <div class="profile-field"><div class="profile-label">ID пользователя</div><div class="profile-value" id="view-id"></div></div>
+            <div class="profile-field"><div class="profile-label">Имя пользователя</div><div class="profile-value" id="view-username"></div></div>
+            <div class="profile-field"><div class="profile-label">О себе</div><div class="profile-value" id="view-bio"></div></div>
             <h4 style="margin-top:20px; color:var(--text-muted);">Подарки</h4>
             <div id="view-gifts" style="display:flex; flex-wrap:wrap; gap:10px;"></div>
-            
             <button onclick="document.getElementById('profile-view-overlay').classList.add('hidden')" style="margin-top:20px; background:var(--bg-input);">Закрыть</button>
         </div>
     </div>
@@ -140,22 +129,17 @@
     <div id="settings-overlay" class="modal-overlay hidden">
         <div class="modal-box">
             <h2>Настройки</h2>
-            
             <div style="text-align:center; margin-bottom:15px;">
                 <div class="profile-avatar-big" id="settings-avatar-preview"></div>
                 <label for="avatar-upload" style="background:var(--bg-input); padding:8px 15px; border-radius:20px; cursor:pointer; font-size:13px;">Сменить фото</label>
                 <input type="file" id="avatar-upload" accept="image/*" style="display:none;" onchange="handleAvatarUpload(event)">
             </div>
-
             <label style="font-size:12px; color:var(--text-muted);">Отображаемое имя</label>
             <input type="text" id="settings-display-name">
-            
             <label style="font-size:12px; color:var(--text-muted);">6-значный ID</label>
             <input type="text" id="settings-six-id" maxlength="6">
-            
             <label style="font-size:12px; color:var(--text-muted);">О себе</label>
             <input type="text" id="settings-bio">
-            
             <button onclick="saveProfile()">Сохранить</button>
             <button onclick="logout()" style="background:#ef4444;">Выйти</button>
             <button onclick="document.getElementById('settings-overlay').classList.add('hidden')" style="background:transparent; border:1px solid var(--border);">Отмена</button>
@@ -204,9 +188,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="balance-badge">
-                    🪙 <span id="coin-balance">0</span> R
-                </div>
+                <div class="balance-badge">🪙 <span id="coin-balance">0</span> R</div>
             </div>
             <div id="messages"></div>
             <div id="input-area">
@@ -220,6 +202,7 @@
     <script>
         let ws, myUser = null, isLoginMode = true;
         let allUsers = []; 
+        let myContacts = []; // Сюда сохраняются люди, с которыми есть чат
         let myGroups = [];
         let currentChatId = null; 
         let currentChatType = null; 
@@ -247,7 +230,6 @@
                     canvas.width = width; canvas.height = height;
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
-                    
                     selectedAvatarBase64 = canvas.toDataURL('image/jpeg');
                     document.getElementById('settings-avatar-preview').innerHTML = `<img src="${selectedAvatarBase64}">`;
                 }
@@ -305,12 +287,18 @@
                     document.getElementById('app').classList.remove('hidden');
                     document.getElementById('coin-balance').innerText = myUser.coins;
                     
+                    // Запрашиваем список чатов и групп при входе
                     ws.send(JSON.stringify({ type: 'get_groups' })); 
+                    ws.send(JSON.stringify({ type: 'get_chat_list' })); 
                     setupAppLogic();
                 }
                 
                 if(data.type === 'user_list') {
                     allUsers = data.users;
+                    renderChats();
+                }
+                if(data.type === 'chat_list') {
+                    myContacts = data.contacts;
                     renderChats();
                 }
                 if(data.type === 'my_groups') {
@@ -343,6 +331,7 @@
                         }
                     } else {
                         unreadMessages[chatId] = (unreadMessages[chatId] || 0) + 1;
+                        if (data.type === 'private' && !myContacts.includes(data.from)) myContacts.push(data.from); // Добавляем в контакты, если пришло новое
                         renderChats();
                     }
                 }
@@ -355,7 +344,6 @@
                     document.getElementById('view-id').innerText = u.six_digit_id;
                     document.getElementById('view-username').innerText = '@' + u.username;
                     document.getElementById('view-bio').innerText = u.bio;
-                    
                     const giftsDiv = document.getElementById('view-gifts');
                     giftsDiv.innerHTML = data.gifts.map(g => `
                         <div style="background:var(--bg-main); padding:10px; border-radius:8px; text-align:center;">
@@ -379,70 +367,89 @@
 
         function setupAppLogic() { }
 
-        // ОТРИСОВКА СПИСКА ЧАТОВ С ИСПРАВЛЕННЫМ ПОИСКОМ
+        // ИСПРАВЛЕННАЯ ОТРИСОВКА СПИСКА ЧАТОВ
         function renderChats() {
             const list = document.getElementById('chat-list');
             list.innerHTML = '';
-            // Берем текст из поиска, переводим в нижний регистр и убираем пробелы
             const query = document.getElementById('search-input').value.toLowerCase().trim();
+            const isSearching = query.length > 0;
 
-            // 1. Группы
-            myGroups.filter(g => g.name.toLowerCase().includes(query)).forEach(g => {
-                const div = document.createElement('div');
-                div.className = 'chat-item';
-                div.onclick = () => openChat('group_' + g.id, 'group', g.name, '');
-                div.innerHTML = `
-                    <div class="avatar-box" style="background:#5eb5f7; font-size:24px;">👥</div>
-                    <div class="chat-info">
-                        <div class="chat-top"><span class="chat-name">${g.name}</span></div>
-                        <div class="chat-bottom"><span class="chat-msg">Групповой чат</span></div>
-                    </div>`;
-                list.appendChild(div);
-            });
+            // Если поиска нет — показываем только группы и мои контакты
+            if (!isSearching) {
+                // 1. Группы
+                myGroups.forEach(g => {
+                    const div = document.createElement('div');
+                    div.className = 'chat-item';
+                    div.onclick = () => openChat('group_' + g.id, 'group', g.name, '');
+                    div.innerHTML = `
+                        <div class="avatar-box" style="background:#5eb5f7; font-size:24px;">👥</div>
+                        <div class="chat-info">
+                            <div class="chat-top"><span class="chat-name">${g.name}</span></div>
+                            <div class="chat-bottom"><span class="chat-msg">Групповой чат</span></div>
+                        </div>`;
+                    list.appendChild(div);
+                });
 
-            // 2. Личные чаты (Ищем по Юзернейму, Имени или 6-значному ID)
-            allUsers.filter(u => {
-                if (u.username === myUser.username) return false; // Скрываем себя
-                
-                const matchUsername = u.username ? u.username.toLowerCase().includes(query) : false;
-                const matchId = u.six_digit_id ? u.six_digit_id.toString().includes(query) : false;
-                const matchDisplayName = u.display_name ? u.display_name.toLowerCase().includes(query) : false;
-                
-                return matchUsername || matchId || matchDisplayName;
-            }).forEach(u => {
-                const div = document.createElement('div');
-                div.className = 'chat-item';
-                div.onclick = () => openChat(u.username, 'user', u.display_name || u.username, u.status);
-                
-                const avatarHtml = u.avatar ? `<img src="${u.avatar}">` : '👤';
-                const dotClass = u.status === 'online' ? 'online' : 'offline';
-                const unread = unreadMessages[u.username] || 0;
-                
-                div.innerHTML = `
-                    <div class="avatar-box">
-                        ${avatarHtml}
-                        <div class="status-dot ${dotClass}"></div>
-                    </div>
-                    <div class="chat-info">
-                        <div class="chat-top">
-                            <span class="chat-name">${u.display_name || u.username}</span>
-                        </div>
-                        <div class="chat-bottom">
-                            <span class="chat-msg">${u.bio || 'Нажмите, чтобы написать'}</span>
-                            ${unread > 0 ? `<span class="unread-badge">${unread}</span>` : ''}
-                        </div>
-                    </div>`;
-                list.appendChild(div);
-            });
+                // 2. Только те, с кем есть чат (myContacts)
+                allUsers.filter(u => myContacts.includes(u.username)).forEach(u => {
+                    const div = document.createElement('div');
+                    div.className = 'chat-item';
+                    div.onclick = () => openChat(u.username, 'user', u.display_name || u.username, u.status);
+                    const avatarHtml = u.avatar ? `<img src="${u.avatar}">` : '👤';
+                    const dotClass = u.status === 'online' ? 'online' : 'offline';
+                    const unread = unreadMessages[u.username] || 0;
+                    div.innerHTML = `
+                        <div class="avatar-box">${avatarHtml}<div class="status-dot ${dotClass}"></div></div>
+                        <div class="chat-info">
+                            <div class="chat-top"><span class="chat-name">${u.display_name || u.username}</span></div>
+                            <div class="chat-bottom">
+                                <span class="chat-msg">${u.bio || 'Нажмите, чтобы написать'}</span>
+                                ${unread > 0 ? `<span class="unread-badge">${unread}</span>` : ''}
+                            </div>
+                        </div>`;
+                    list.appendChild(div);
+                });
+
+                if (myGroups.length === 0 && myContacts.length === 0) {
+                    list.innerHTML = '<div class="search-hint">У вас пока нет чатов.<br>Введите ID или @юзернейм в поиск, чтобы найти друга.</div>';
+                }
+            } 
+            // Если есть поиск — ищем по ВСЕМ пользователям
+            else {
+                allUsers.filter(u => {
+                    if (u.username === myUser.username) return false;
+                    const matchUsername = u.username ? u.username.toLowerCase().includes(query) : false;
+                    const matchId = u.six_digit_id ? u.six_digit_id.toString().includes(query) : false;
+                    const matchDisplayName = u.display_name ? u.display_name.toLowerCase().includes(query) : false;
+                    return matchUsername || matchId || matchDisplayName;
+                }).forEach(u => {
+                    const div = document.createElement('div');
+                    div.className = 'chat-item';
+                    div.onclick = () => {
+                        // При клике на найденного пользователя добавляем его в контакты и открываем чат
+                        if (!myContacts.includes(u.username)) myContacts.push(u.username);
+                        openChat(u.username, 'user', u.display_name || u.username, u.status);
+                        document.getElementById('search-input').value = ''; // Очищаем поиск
+                        renderChats();
+                    };
+                    const avatarHtml = u.avatar ? `<img src="${u.avatar}">` : '👤';
+                    const dotClass = u.status === 'online' ? 'online' : 'offline';
+                    div.innerHTML = `
+                        <div class="avatar-box">${avatarHtml}<div class="status-dot ${dotClass}"></div></div>
+                        <div class="chat-info">
+                            <div class="chat-top"><span class="chat-name">${u.display_name || u.username}</span></div>
+                            <div class="chat-bottom"><span class="chat-msg">@${u.username}</span></div>
+                        </div>`;
+                    list.appendChild(div);
+                });
+            }
         }
 
         function openChat(id, type, name, status) {
             currentChatId = id;
             currentChatType = type;
-            
             document.getElementById('chat-with').innerText = name;
             document.getElementById('chat-status').innerText = status === 'online' ? 'В сети' : 'Был(а) недавно';
-            
             document.getElementById('messages').innerHTML = ''; 
             ws.send(JSON.stringify({ type: 'get_history', with: id }));
             
@@ -474,13 +481,14 @@
 
             if (currentChatType === 'user') {
                 ws.send(JSON.stringify({ type: 'private', from: myUser.username, to: currentChatId, text: text }));
+                if (!myContacts.includes(currentChatId)) myContacts.push(currentChatId); // Сразу добавляем в список
             } else {
                 const gId = currentChatId.split('_')[1];
                 ws.send(JSON.stringify({ type: 'group_message', from: myUser.username, groupId: gId, text: text }));
             }
-            
             addMsgToScreen(`${text} <span class="msg-time">${new Date().toLocaleTimeString()}</span>`, 'my-msg', true);
             input.value = '';
+            renderChats();
         }
 
         document.getElementById('message-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
@@ -529,6 +537,7 @@
 
         function openCreateGroup() {
             const list = document.getElementById('group-members-list');
+            // В группы можно добавлять только тех, с кем есть чат (или всех, если хочешь). Сделаем всех.
             list.innerHTML = allUsers.filter(u => u.username !== myUser.username).map(u => `
                 <label style="display:flex; padding:10px; border-bottom:1px solid var(--border); align-items:center; cursor:pointer;">
                     <input type="checkbox" value="${u.username}" style="width:20px; margin-right:10px;">
