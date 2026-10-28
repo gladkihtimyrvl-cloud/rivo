@@ -13,7 +13,6 @@ const wss = new WebSocket.Server({ server });
 const db = new sqlite3.Database('./database.db');
 
 db.serialize(() => {
-    // Пользователи (avatar теперь TEXT для хранения картинки в Base64)
     db.run(`CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT, 
         username TEXT UNIQUE, 
@@ -26,7 +25,6 @@ db.serialize(() => {
         coins INTEGER DEFAULT 100
     )`);
     
-    // Группы
     db.run(`CREATE TABLE IF NOT EXISTS groups (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT,
@@ -39,7 +37,6 @@ db.serialize(() => {
         PRIMARY KEY (group_id, username)
     )`);
 
-    // Сообщения (receiver может быть юзернеймом или ID группы с префиксом 'group_')
     db.run(`CREATE TABLE IF NOT EXISTS messages (
         id INTEGER PRIMARY KEY AUTOINCREMENT, 
         sender TEXT, receiver TEXT, 
@@ -59,7 +56,6 @@ wss.on('connection', function connection(ws) {
         try {
             const data = JSON.parse(message);
 
-            // РЕГИСТРАЦИЯ
             if (data.type === 'register') {
                 const cleanUsername = data.username.trim(); 
                 db.get(`SELECT username FROM users WHERE username = ?`, [cleanUsername], (err, row) => {
@@ -76,7 +72,6 @@ wss.on('connection', function connection(ws) {
                 });
             }
 
-            // ВХОД
             if (data.type === 'login') {
                 const cleanUsername = data.username.trim();
                 db.get(`SELECT * FROM users WHERE username = ?`, [cleanUsername], (err, row) => {
@@ -94,27 +89,30 @@ wss.on('connection', function connection(ws) {
                         clients.set(cleanUsername, ws);
                         ws.username = cleanUsername;
                         
-                        // Отправляем данные пользователя и список его чатов
                         ws.send(JSON.stringify({ 
                             type: 'auth_success', 
                             user: row
                         }));
                         
-                        // Отправляем список всех юзеров (для поиска), но фронтенд покажет только нужных
                         broadcastAllUsers(); 
                     } else ws.send(JSON.stringify({ type: 'auth_error', message: 'Неверный пароль!' }));
                 });
             }
 
-            // ОБНОВЛЕНИЕ ПРОФИЛЯ (Аватарка, имя и т.д.)
             if (data.type === 'update_profile') {
-                db.run(`UPDATE users SET status = ?, bio = ?, avatar = ?, display_name = ?, six_digit_id = ? WHERE username = ?`, 
-                [data.status, data.bio, data.avatar, data.display_name, data.six_digit_id, ws.username], () => {
-                    broadcastAllUsers(); // Обновляем у всех
+                db.get(`SELECT username FROM users WHERE six_digit_id = ? AND username != ?`, [data.six_digit_id, ws.username], (err, row) => {
+                    if (row) return ws.send(JSON.stringify({ type: 'error', message: 'Этот 6-значный ID уже занят!' }));
+                    
+                    db.run(`UPDATE users SET status = ?, bio = ?, avatar = ?, display_name = ?, six_digit_id = ? WHERE username = ?`, 
+                    [data.status, data.bio, data.avatar, data.display_name, data.six_digit_id, ws.username], () => {
+                        broadcastAllUsers();
+                        db.get(`SELECT display_name, six_digit_id FROM users WHERE username = ?`, [ws.username], (e, r) => {
+                            ws.send(JSON.stringify({ type: 'profile_updated', display_name: r.display_name, six_digit_id: r.six_digit_id }));
+                        });
+                    });
                 });
             }
 
-            // ПОИСК ПОЛЬЗОВАТЕЛЯ (Для начала нового чата)
             if (data.type === 'search_user') {
                 const query = data.query.trim();
                 db.get(`SELECT username, display_name, six_digit_id, avatar, status, bio FROM users WHERE username = ? OR six_digit_id = ?`, [query, query], (err, row) => {
@@ -123,13 +121,10 @@ wss.on('connection', function connection(ws) {
                 });
             }
 
-            // СОЗДАНИЕ ГРУППЫ
             if (data.type === 'create_group') {
                 db.run(`INSERT INTO groups (name, creator) VALUES (?, ?)`, [data.name, ws.username], function(err) {
                     const groupId = this.lastID;
-                    // Добавляем создателя в группу
                     db.run(`INSERT INTO group_members (group_id, username) VALUES (?, ?)`, [groupId, ws.username]);
-                    // Добавляем остальных участников
                     data.members.forEach(m => {
                         db.run(`INSERT INTO group_members (group_id, username) VALUES (?, ?)`, [groupId, m]);
                     });
@@ -137,7 +132,6 @@ wss.on('connection', function connection(ws) {
                 });
             }
 
-            // ЛИЧНЫЕ СООБЩЕНИЯ
             if (data.type === 'private' && !data.isGift) {
                 const time = new Date().toLocaleTimeString();
                 db.run(`INSERT INTO messages (sender, receiver, text, isGift, timestamp) VALUES (?, ?, ?, 0, ?)`, [data.from, data.to, data.text, time]);
@@ -145,13 +139,11 @@ wss.on('connection', function connection(ws) {
                 if (recipientSocket) recipientSocket.send(JSON.stringify({ type: 'private', from: data.from, text: data.text, isGift: false, time: time }));
             }
 
-            // СООБЩЕНИЯ В ГРУППУ
             if (data.type === 'group_message') {
                 const time = new Date().toLocaleTimeString();
                 const receiver = 'group_' + data.groupId;
                 db.run(`INSERT INTO messages (sender, receiver, text, isGift, timestamp) VALUES (?, ?, ?, 0, ?)`, [data.from, receiver, data.text, time]);
                 
-                // Рассылаем всем участникам
                 db.all(`SELECT username FROM group_members WHERE group_id = ?`, [data.groupId], (err, rows) => {
                     rows.forEach(r => {
                         const socket = clients.get(r.username);
@@ -162,16 +154,13 @@ wss.on('connection', function connection(ws) {
                 });
             }
 
-            // ИСТОРИЯ ЧАТА
             if (data.type === 'get_history') {
-                // data.with может быть юзернеймом или 'group_123'
                 db.all(`SELECT * FROM messages WHERE (sender = ? AND receiver = ?) OR (sender = ? AND receiver = ?) ORDER BY id ASC`, 
                 [ws.username, data.with, data.with, ws.username], (err, rows) => {
                     if (!err) ws.send(JSON.stringify({ type: 'history', with: data.with, messages: rows }));
                 });
             }
             
-            // ПРОФИЛЬ ПОЛЬЗОВАТЕЛЯ
             if (data.type === 'get_profile') {
                 db.get(`SELECT username, display_name, six_digit_id, status, bio, avatar FROM users WHERE username = ?`, [data.target], (err, user) => {
                     db.all(`SELECT * FROM received_gifts WHERE receiver = ? ORDER BY id DESC`, [data.target], (err, gifts) => {
@@ -180,14 +169,12 @@ wss.on('connection', function connection(ws) {
                 });
             }
 
-            // ПОЛУЧИТЬ СПИСОК ГРУПП
             if (data.type === 'get_groups') {
                 db.all(`SELECT g.id, g.name FROM groups g JOIN group_members gm ON g.id = gm.group_id WHERE gm.username = ?`, [ws.username], (err, rows) => {
                     ws.send(JSON.stringify({ type: 'my_groups', groups: rows }));
                 });
             }
             
-            // ОТПРАВКА ПОДАРКА
             if (data.type === 'private' && data.isGift) {
                 db.get(`SELECT coins FROM users WHERE username = ?`, [ws.username], (err, row) => {
                     if (row.coins < data.giftPrice) return ws.send(JSON.stringify({ type: 'error', message: 'Недостаточно R-коинов!' }));
@@ -218,7 +205,6 @@ wss.on('connection', function connection(ws) {
     });
 });
 
-// Рассылаем всех юзеров (клиент сам решит, кого показывать)
 function broadcastAllUsers() {
     db.all(`SELECT username, display_name, six_digit_id, status, bio, avatar FROM users`, [], (err, rows) => {
         if (!err) {
