@@ -42,7 +42,10 @@ wss.on('connection', function connection(ws) {
                     db.run(`INSERT INTO users (username, display_name, six_digit_id, password) VALUES (?, ?, ?, ?)`, 
                     [cleanUsername, cleanUsername, uniqueId, hash], function(err) {
                         if (err) ws.send(JSON.stringify({ type: 'auth_error', message: 'Ошибка сервера.' }));
-                        else ws.send(JSON.stringify({ type: 'auth_success' }));
+                        else {
+                            ws.send(JSON.stringify({ type: 'auth_success' }));
+                            broadcastAllUsers(); // <--- ВАЖНО: Рассылаем список всем, чтобы поиск работал сразу
+                        }
                     });
                 });
             }
@@ -80,7 +83,6 @@ wss.on('connection', function connection(ws) {
                 });
             }
 
-            // АДМИН: ВЫДАЧА КОИНОВ
             if (data.type === 'admin_give_coins') {
                 if (ws.username !== 'revezzz') return ws.send(JSON.stringify({ type: 'error', message: 'У вас нет прав!' }));
                 
@@ -88,13 +90,8 @@ wss.on('connection', function connection(ws) {
                     db.get(`SELECT coins FROM users WHERE username = ?`, [data.target], (e, r) => {
                         ws.send(JSON.stringify({ type: 'admin_success', message: `Начислено ${data.amount} R пользователю ${data.target}` }));
                         const recipientSocket = clients.get(data.target);
-                        if (recipientSocket) {
-                            recipientSocket.send(JSON.stringify({ type: 'update_coins', coins: r.coins }));
-                        }
-                        // Если админ выдал сам себе
-                        if (data.target === ws.username) {
-                            ws.send(JSON.stringify({ type: 'update_coins', coins: r.coins }));
-                        }
+                        if (recipientSocket) recipientSocket.send(JSON.stringify({ type: 'update_coins', coins: r.coins }));
+                        if (data.target === ws.username) ws.send(JSON.stringify({ type: 'update_coins', coins: r.coins }));
                     });
                 });
             }
