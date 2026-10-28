@@ -92,20 +92,22 @@
         .shop-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
         .shop-item { background: var(--bg-main); padding: 20px 10px; border-radius: 12px; text-align: center; cursor: pointer; border: 1px solid var(--border); transition: 0.2s; }
         .shop-item:hover { background: var(--bg-input); transform: translateY(-2px); border-color: var(--gold);}
-        .shop-svg { width: 60px; height: 60px; display: block; margin: 0 auto 10px; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.5)); }
+        
+        /* СТИЛИ ДЛЯ SVG (ГАРАНТИРУЮТ ПРАВИЛЬНЫЙ РАЗМЕР) */
+        .shop-item svg { width: 60px; height: 60px; display: block; margin: 0 auto 10px; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.5)); }
         .shop-price { color: var(--gold); font-size: 14px; font-weight: bold; }
         
-        .gift-event { align-self: center; text-align: center; margin: 15px 0; animation: pop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .gift-svg-big { width: 120px; height: 120px; filter: drop-shadow(0 0 20px rgba(251, 191, 36, 0.5)); animation: float 3s ease-in-out infinite; }
-        .gift-text { background: rgba(0,0,0,0.6); padding: 8px 20px; border-radius: 20px; margin-top: 10px; display: inline-block; font-size: 14px; color: #fff; border: 1px solid var(--gold); backdrop-filter: blur(5px);}
+        .gift-event { align-self: center; display: flex; flex-direction: column; align-items: center; margin: 20px 0; animation: pop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .gift-event svg { width: 100px; height: 100px; filter: drop-shadow(0 0 25px rgba(251, 191, 36, 0.6)); animation: float 3s ease-in-out infinite; }
+        .gift-text { background: rgba(0,0,0,0.6); padding: 8px 20px; border-radius: 20px; margin-top: 10px; display: inline-block; font-size: 14px; color: #fff; border: 1px solid var(--gold); backdrop-filter: blur(5px); text-align: center; max-width: 250px; line-height: 1.4;}
         
         @keyframes pop { 0% { transform: scale(0); } 80% { transform: scale(1.1); } 100% { transform: scale(1); } }
         @keyframes float { 0% { transform: translateY(0); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0); } }
 
-        .profile-gift-card { background: var(--bg-main); padding: 10px; border-radius: 10px; text-align: center; width: 100px; border: 1px solid var(--border); }
-        .profile-gift-svg { width: 50px; height: 50px; margin-bottom: 5px; }
-        .profile-gift-sender { font-size: 10px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .profile-gift-comment { font-size: 10px; color: var(--gold); margin-top: 3px; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .profile-gift-card { background: var(--bg-main); padding: 10px; border-radius: 10px; text-align: center; width: 90px; border: 1px solid var(--border); display: flex; flex-direction: column; align-items: center;}
+        .profile-gift-card svg { width: 40px; height: 40px; margin-bottom: 5px; }
+        .profile-gift-sender { font-size: 10px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;}
+        .profile-gift-comment { font-size: 10px; color: var(--gold); margin-top: 3px; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;}
 
         .admin-btn { background: linear-gradient(135deg, #fbbf24, #f59e0b) !important; color: #000 !important; font-weight: bold; }
         .admin-btn:hover { box-shadow: 0 0 15px rgba(251, 191, 36, 0.5); }
@@ -267,6 +269,7 @@
                 <div style="display:flex; align-items:center;">
                     <div id="back-btn" onclick="closeChat()">←</div>
                     <div class="header-info" onclick="openUserProfile(currentChatId)">
+                        <!-- ДОБАВИЛИ СТАТУС ДЛЯ АВАТАРКИ В ШАПКЕ -->
                         <div class="avatar-box" id="chat-header-avatar"></div>
                         <div>
                             <div class="header-name" id="chat-with">Выберите чат</div>
@@ -297,14 +300,11 @@
         let viewingUser = null;
         let currentUserBlocked = false;
 
-        // КРАСИВЫЕ SVG ПОДАРКИ ВМЕСТО СМАЙЛИКОВ
-        const GIFT_ROSE = `<svg class="shop-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M50 20C30 20 20 35 20 50C20 65 35 80 50 80C65 80 80 65 80 50C80 35 70 20 50 20Z" fill="url(#roseGrad)"/><path d="M50 40C40 40 35 45 35 50C35 55 40 60 50 60C60 60 65 55 65 50C65 45 60 40 50 40Z" fill="#800000"/><path d="M50 80V95" stroke="#2e8b57" stroke-width="4" stroke-linecap="round"/><path d="M50 85C40 85 35 90 30 90" stroke="#2e8b57" stroke-width="4" stroke-linecap="round"/><defs><linearGradient id="roseGrad" x1="50" y1="20" x2="50" y2="80" gradientUnits="userSpaceOnUse"><stop stop-color="#FF4B4B"/><stop offset="1" stop-color="#990000"/></linearGradient></defs></svg>`;
-        
-        const GIFT_DIAMOND = `<svg class="shop-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M50 10L90 40L50 90L10 40L50 10Z" fill="url(#diaGrad)"/><path d="M50 10L30 40L50 90L70 40L50 10Z" fill="#00BFFF" opacity="0.6"/><path d="M10 40H90" stroke="#E0FFFF" stroke-width="2"/><defs><linearGradient id="diaGrad" x1="50" y1="10" x2="50" y2="90" gradientUnits="userSpaceOnUse"><stop stop-color="#E0FFFF"/><stop offset="1" stop-color="#00BFFF"/></linearGradient></defs></svg>`;
-
-        const GIFT_BEAR = `<svg class="shop-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="30" cy="30" r="15" fill="#8B4513"/><circle cx="70" cy="30" r="15" fill="#8B4513"/><circle cx="50" cy="55" r="30" fill="url(#bearGrad)"/><circle cx="38" cy="50" r="4" fill="#000"/><circle cx="62" cy="50" r="4" fill="#000"/><ellipse cx="50" cy="65" rx="10" ry="7" fill="#D2B48C"/><circle cx="50" cy="62" r="3" fill="#000"/><defs><linearGradient id="bearGrad" x1="50" y1="25" x2="50" y2="85" gradientUnits="userSpaceOnUse"><stop stop-color="#D2691E"/><stop offset="1" stop-color="#8B4513"/></linearGradient></defs></svg>`;
-
-        const GIFT_CROWN = `<svg class="shop-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M15 70L10 30L35 50L50 15L65 50L90 30L85 70H15Z" fill="url(#crownGrad)"/><rect x="15" y="70" width="70" height="15" rx="5" fill="#B8860B"/><circle cx="50" cy="25" r="4" fill="#FF0000"/><circle cx="25" cy="40" r="3" fill="#0000FF"/><circle cx="75" cy="40" r="3" fill="#0000FF"/><defs><linearGradient id="crownGrad" x1="50" y1="15" x2="50" y2="70" gradientUnits="userSpaceOnUse"><stop stop-color="#FFD700"/><stop offset="1" stop-color="#DAA520"/></linearGradient></defs></svg>`;
+        // НОВЫЕ, ГАРАНТИРОВАННО РАБОЧИЕ SVG ПОДАРКИ
+        const GIFT_ROSE = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M50 20 C30 20, 20 40, 30 60 C35 70, 50 80, 50 90 C50 80, 65 70, 70 60 C80 40, 70 20, 50 20 Z" fill="#E91E63"/><path d="M40 40 C35 50, 45 60, 50 60 C55 60, 65 50, 60 40 C55 30, 45 30, 40 40 Z" fill="#C2185B"/><path d="M50 90 L50 100" stroke="#4CAF50" stroke-width="4" stroke-linecap="round"/></svg>`;
+        const GIFT_DIAMOND = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><polygon points="50,10 90,40 50,90 10,40" fill="#00BCD4"/><polygon points="50,10 70,40 50,90 30,40" fill="#80DEEA" opacity="0.6"/><line x1="10" y1="40" x2="90" y2="40" stroke="#E0F7FA" stroke-width="2"/></svg>`;
+        const GIFT_BEAR = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="25" cy="25" r="15" fill="#8D6E63"/><circle cx="75" cy="25" r="15" fill="#8D6E63"/><circle cx="50" cy="55" r="35" fill="#A1887F"/><circle cx="35" cy="50" r="5" fill="#3E2723"/><circle cx="65" cy="50" r="5" fill="#3E2723"/><ellipse cx="50" cy="65" rx="12" ry="8" fill="#EFEBE9"/><circle cx="50" cy="62" r="3" fill="#3E2723"/></svg>`;
+        const GIFT_CROWN = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M15 70 L10 30 L35 50 L50 15 L65 50 L90 30 L85 70 Z" fill="#FFC107"/><rect x="15" y="70" width="70" height="15" fill="#FF8F00" rx="5"/><circle cx="50" cy="25" r="5" fill="#F44336"/><circle cx="25" cy="40" r="4" fill="#2196F3"/><circle cx="75" cy="40" r="4" fill="#2196F3"/></svg>`;
 
         const gifts = [
             { id: 'gift_rose', svg: GIFT_ROSE, price: 10 },
@@ -317,7 +317,7 @@
 
         function getGiftById(id) {
             const gift = gifts.find(g => g.id === id);
-            return gift ? gift.svg : id; // Если не нашли, возвращаем старый эмодзи (для совместимости)
+            return gift ? gift.svg : id; // Для старых подарков-смайликов
         }
 
         function updateBalanceUI() {
@@ -425,7 +425,7 @@
                 
                 if(data.type === 'user_list') { 
                     allUsers = data.users; 
-                    document.getElementById('total-users-count').innerText = allUsers.length; // СЧЕТЧИК ПОЛЬЗОВАТЕЛЕЙ
+                    document.getElementById('total-users-count').innerText = allUsers.length;
                     renderChats(); 
                 }
                 if(data.type === 'chat_list') { myContacts = data.contacts; renderChats(); }
@@ -509,13 +509,8 @@
                             const div = document.createElement('div');
                             div.className = 'profile-gift-card';
                             let giftComment = (g.comment && g.comment !== 'undefined') ? `<div class="profile-gift-comment" title="${g.comment}">"${g.comment}"</div>` : '';
-                            
-                            // ВЫВОДИМ SVG В ПРОФИЛЕ
                             let svgHtml = getGiftById(g.gift_emoji);
-                            if(svgHtml.includes('<svg')) {
-                                svgHtml = svgHtml.replace('class="shop-svg"', 'class="profile-gift-svg"');
-                            }
-
+                            
                             div.innerHTML = `
                                 ${svgHtml}
                                 <div class="profile-gift-sender">от ${g.sender}</div>
@@ -689,6 +684,17 @@
             currentChatType = type;
             document.getElementById('chat-with').innerText = name;
             document.getElementById('chat-status').innerText = status === 'online' ? 'В сети' : 'Был(а) недавно';
+            
+            // ФИКС: ДОБАВЛЯЕМ АВАТАРКУ И СТАТУС В ШАПКУ ЧАТА
+            const userObj = allUsers.find(u => u.username === id);
+            if (userObj) {
+                const avatarHtml = userObj.avatar ? `<img src="${userObj.avatar}">` : '👤';
+                const dotClass = status === 'online' ? 'online' : 'offline';
+                document.getElementById('chat-header-avatar').innerHTML = `${avatarHtml}<div class="status-dot ${dotClass}"></div>`;
+            } else {
+                document.getElementById('chat-header-avatar').innerHTML = `<div style="background:#5eb5f7; width:100%; height:100%; display:flex; justify-content:center; align-items:center; font-size:24px;">👥</div>`;
+            }
+
             document.getElementById('messages').innerHTML = ''; 
             ws.send(JSON.stringify({ type: 'get_history', with: id }));
             
@@ -740,16 +746,13 @@
             if(scroll) document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
         }
 
-        // КРАСИВЫЙ ВЫВОД ПОДАРКА В ЧАТЕ
+        // ФИКС: ТЕПЕРЬ ПОДАРКИ В ЧАТЕ ОТОБРАЖАЮТСЯ КРАСИВО И НЕ ЛОМАЮТСЯ
         function addGiftToScreen(giftId, senderName, comment) {
             const div = document.createElement('div');
             div.className = 'gift-event';
             let wishText = (comment && comment !== 'undefined') ? `«${comment}»` : '';
             
             let svgHtml = getGiftById(giftId);
-            if(svgHtml.includes('<svg')) {
-                svgHtml = svgHtml.replace('class="shop-svg"', 'class="gift-svg-big"');
-            }
 
             div.innerHTML = `
                 ${svgHtml}
@@ -825,7 +828,6 @@
             
             const finalComment = comment.trim() === '' ? '' : comment;
             
-            // Отправляем ID подарка (например, 'gift_rose')
             ws.send(JSON.stringify({ type: 'private', from: myUser.username, to: currentChatId, text: giftId, isGift: true, giftPrice: price, comment: finalComment }));
             addGiftToScreen(giftId, "Вы", finalComment);
             document.getElementById('shop-overlay').classList.add('hidden');
@@ -867,7 +869,6 @@
             ws.send(JSON.stringify({ type: 'redeem_promo', code: code }));
         }
 
-        // Создание промокода с кастомным лимитом
         function createPromo() {
             const code = document.getElementById('promo-code-input').value.trim();
             const reward = parseInt(document.getElementById('promo-reward-input').value);
