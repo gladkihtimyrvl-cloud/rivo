@@ -25,7 +25,6 @@ db.serialize(() => {
         text TEXT, isGift INTEGER, comment TEXT, timestamp TEXT
     )`);
     
-    // ТАБЛИЦА ДЛЯ NFT
     db.run(`CREATE TABLE IF NOT EXISTS nfts (
         id TEXT PRIMARY KEY,
         owner TEXT,
@@ -100,15 +99,12 @@ wss.on('connection', function connection(ws) {
                 });
             }
 
-            // УЛУЧШЕНИЕ ДО ПОДАРКА В NFT (РУЛЕТКА)
             if (data.type === 'upgrade_to_nft') {
                 const cost = data.cost;
                 db.get(`SELECT coins FROM users WHERE username = ?`, [ws.username], (err, row) => {
                     if (row.coins < cost) return ws.send(JSON.stringify({ type: 'error', message: 'Недостаточно R-коинов для улучшения!' }));
                     
-                    // Списываем коины
                     db.run(`UPDATE users SET coins = coins - ? WHERE username = ?`, [cost, ws.username], () => {
-                        // Генерируем случайные параметры NFT
                         const rarities = ['Common', 'Rare', 'Epic', 'Legendary'];
                         const colors = ['#FF5252', '#448AFF', '#69F0AE', '#FFD740', '#E040FB', '#00E5FF'];
                         const patterns = ['None', 'Stripes', 'Dots', 'Galaxy'];
@@ -133,14 +129,12 @@ wss.on('connection', function connection(ws) {
                 });
             }
 
-            // ПОЛУЧИТЬ NFT ПОЛЬЗОВАТЕЛЯ
             if (data.type === 'get_nfts') {
                 db.all(`SELECT * FROM nfts WHERE owner = ?`, [data.target], (err, rows) => {
                     ws.send(JSON.stringify({ type: 'user_nfts', nfts: rows }));
                 });
             }
 
-            // ВЫСТАВИТЬ НА МАРКЕТПЛЕЙС
             if (data.type === 'list_nft') {
                 db.run(`UPDATE nfts SET is_listed = 1, price = ? WHERE id = ? AND owner = ?`, [data.price, data.nft_id, ws.username], () => {
                     ws.send(JSON.stringify({ type: 'nft_listed', success: true }));
@@ -148,7 +142,6 @@ wss.on('connection', function connection(ws) {
                 });
             }
 
-            // КУПИТЬ NFT С МАРКЕТПЛЕЙСА
             if (data.type === 'buy_nft') {
                 db.get(`SELECT * FROM nfts WHERE id = ? AND is_listed = 1`, [data.nft_id], (err, nft) => {
                     if (!nft) return ws.send(JSON.stringify({ type: 'error', message: 'NFT уже продан или снят с продажи.' }));
@@ -157,22 +150,19 @@ wss.on('connection', function connection(ws) {
                     db.get(`SELECT coins FROM users WHERE username = ?`, [ws.username], (e, buyer) => {
                         if (buyer.coins < nft.price) return ws.send(JSON.stringify({ type: 'error', message: 'Недостаточно R-коинов!' }));
 
-                        // Снимаем деньги у покупателя, начисляем продавцу
                         db.run(`UPDATE users SET coins = coins - ? WHERE username = ?`, [nft.price, ws.username]);
                         db.run(`UPDATE users SET coins = coins + ? WHERE username = ?`, [nft.price, nft.owner]);
                         
-                        // Меняем владельца
                         db.run(`UPDATE nfts SET owner = ?, is_listed = 0, price = 0 WHERE id = ?`, [ws.username, data.nft_id], () => {
                             ws.send(JSON.stringify({ type: 'nft_bought', success: true }));
                             const sellerSocket = clients.get(nft.owner);
-                            if(sellerSocket) sellerSocket.send(JSON.stringify({ type: 'update_coins', coins: nft.price + buyer.coins })); // Приблизительно
+                            if(sellerSocket) sellerSocket.send(JSON.stringify({ type: 'update_coins', coins: nft.price + buyer.coins }));
                             broadcastMarketplace();
                         });
                     });
                 });
             }
 
-            // ПОЛУЧИТЬ МАРКЕТПЛЕЙС
             if (data.type === 'get_marketplace') {
                 db.all(`SELECT * FROM nfts WHERE is_listed = 1`, [], (err, rows) => {
                     ws.send(JSON.stringify({ type: 'marketplace_data', items: rows }));
@@ -230,7 +220,6 @@ wss.on('connection', function connection(ws) {
                 }
             }
             
-            // СТАРЫЕ ПОДАРКИ (ТЕПЕРЬ БЕЗ ХРАНЕНИЯ В ПРОФИЛЕ, ТОЛЬКО В ЧАТЕ)
             if (data.type === 'private' && data.isGift) {
                 db.get(`SELECT coins FROM users WHERE username = ?`, [ws.username], (err, row) => {
                     if (row.coins < data.giftPrice) return ws.send(JSON.stringify({ type: 'error', message: 'Недостаточно R-коинов!' }));
