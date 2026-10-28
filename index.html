@@ -3,9 +3,7 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
-    <!-- СТРОЧКИ ДЛЯ ПРЕВРАЩЕНИЯ САЙТА В ПРИЛОЖЕНИЕ (PWA) -->
     <link rel="manifest" href="manifest.json">
-    <!-- ИКОНКА ДЛЯ IPHONE -->
     <link rel="apple-touch-icon" href="icon.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -27,15 +25,11 @@
 
         .coin-icon { vertical-align: middle; width: 16px; height: 16px; margin-right: 4px; margin-top: -2px; }
 
-        /* --- АНИМАЦИИ ДЛЯ ОКОН --- */
-        @keyframes modalFadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        @keyframes modalSlideUp {
-            from { transform: translateY(30px) scale(0.95); opacity: 0; }
-            to { transform: translateY(0) scale(1); opacity: 1; }
-        }
+        /* --- АНИМАЦИИ ОКОН --- */
+        @keyframes modalFadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes modalFadeOut { from { opacity: 1; } to { opacity: 0; } }
+        @keyframes modalSlideUp { from { transform: translateY(40px) scale(0.95); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+        @keyframes modalSlideDown { from { transform: translateY(0) scale(1); opacity: 1; } to { transform: translateY(40px) scale(0.95); opacity: 0; } }
 
         /* ЛЕВАЯ ПАНЕЛЬ */
         #sidebar { width: 340px; background: var(--bg-panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 2; }
@@ -88,9 +82,12 @@
         .action-btn { background: none; border: none; color: var(--text-muted); font-size: 24px; cursor: pointer; padding: 5px; transition: 0.2s; }
         .action-btn:hover { color: var(--accent); }
 
-        /* МОДАЛКИ С АНИМАЦИЕЙ */
+        /* МОДАЛКИ */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; z-index: 100; animation: modalFadeIn 0.3s ease; }
+        .modal-overlay.animate-out { animation: modalFadeOut 0.25s ease forwards; }
+        
         .modal-box { background: var(--bg-panel); border-radius: 12px; width: 400px; max-height: 90vh; overflow-y: auto; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); animation: modalSlideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .modal-overlay.animate-out .modal-box { animation: modalSlideDown 0.25s ease forwards; }
         
         .modal-box h2 { margin-top: 0; text-align: center; font-weight: 500; font-size: 20px; }
         .modal-box input, .modal-box select { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-main); color: white; outline: none; font-size: 15px; }
@@ -110,21 +107,23 @@
 
         /* МАГАЗИН */
         .shop-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
-        .shop-item { background: var(--bg-main); padding: 20px 10px; border-radius: 12px; text-align: center; cursor: pointer; border: 1px solid var(--border); transition: 0.2s; }
-        .shop-item:hover { background: var(--bg-input); transform: translateY(-2px); border-color: var(--gold);}
+        .shop-item { background: var(--bg-main); padding: 20px 10px; border-radius: 12px; text-align: center; cursor: pointer; border: 1px solid var(--border); transition: 0.2s; position: relative; overflow: hidden;}
+        .shop-item:hover { background: var(--bg-input); transform: translateY(-3px); border-color: var(--gold); box-shadow: 0 5px 15px rgba(0,0,0,0.3);}
         
-        .shop-item svg { width: 60px; height: 60px; display: block; margin: 0 auto 10px; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.5)); }
-        .shop-price { color: var(--gold); font-size: 14px; font-weight: bold; }
+        /* УЛУЧШЕННЫЕ SVG */
+        .shop-item svg { width: 70px; height: 70px; display: block; margin: 0 auto 10px; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5)); transition: 0.3s; }
+        .shop-item:hover svg { transform: scale(1.1) rotate(5deg); }
+        .shop-price { color: var(--gold); font-size: 15px; font-weight: bold; }
         
         .gift-event { align-self: center; display: flex; flex-direction: column; align-items: center; margin: 20px 0; animation: pop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .gift-event svg { width: 100px; height: 100px; filter: drop-shadow(0 0 25px rgba(251, 191, 36, 0.6)); animation: float 3s ease-in-out infinite; }
-        .gift-text { background: rgba(0,0,0,0.6); padding: 8px 20px; border-radius: 20px; margin-top: 10px; display: inline-block; font-size: 14px; color: #fff; border: 1px solid var(--gold); backdrop-filter: blur(5px); text-align: center; max-width: 250px; line-height: 1.4;}
+        .gift-event svg { width: 120px; height: 120px; filter: drop-shadow(0 0 35px rgba(251, 191, 36, 0.8)); animation: float 3s ease-in-out infinite; }
+        .gift-text { background: rgba(0,0,0,0.7); padding: 10px 25px; border-radius: 25px; margin-top: 15px; display: inline-block; font-size: 15px; color: #fff; border: 1px solid var(--gold); backdrop-filter: blur(10px); text-align: center; max-width: 280px; line-height: 1.4; font-weight: 500; box-shadow: 0 10px 20px rgba(0,0,0,0.5);}
         
         @keyframes pop { 0% { transform: scale(0); } 80% { transform: scale(1.1); } 100% { transform: scale(1); } }
-        @keyframes float { 0% { transform: translateY(0); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0); } }
+        @keyframes float { 0% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-15px) rotate(2deg); } 100% { transform: translateY(0) rotate(-2deg); } }
 
         .profile-gift-card { background: var(--bg-main); padding: 10px; border-radius: 10px; text-align: center; width: 90px; border: 1px solid var(--border); display: flex; flex-direction: column; align-items: center;}
-        .profile-gift-card svg { width: 40px; height: 40px; margin-bottom: 5px; }
+        .profile-gift-card svg { width: 45px; height: 45px; margin-bottom: 5px; }
         .profile-gift-sender { font-size: 10px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;}
         .profile-gift-comment { font-size: 10px; color: var(--gold); margin-top: 3px; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;}
 
@@ -185,7 +184,7 @@
                 <button onclick="logout()" style="background:var(--danger); margin: 0;">Выйти из аккаунта</button>
             </div>
 
-            <button onclick="document.getElementById('profile-view-overlay').classList.add('hidden')" style="margin-top:10px; background:transparent; border:1px solid var(--border);">Закрыть</button>
+            <button onclick="closeModal('profile-view-overlay')" style="margin-top:10px; background:transparent; border:1px solid var(--border);">Закрыть</button>
         </div>
     </div>
 
@@ -235,7 +234,7 @@
             </div>
 
             <button onclick="logout()" style="background:var(--danger); margin-top: 20px;">Выйти из аккаунта</button>
-            <button onclick="document.getElementById('settings-overlay').classList.add('hidden')" style="background:transparent; border:1px solid var(--border);">Отмена</button>
+            <button onclick="closeModal('settings-overlay')" style="background:transparent; border:1px solid var(--border);">Отмена</button>
         </div>
     </div>
 
@@ -246,7 +245,7 @@
                 Ваш баланс: <span id="shop-balance">0</span> R
             </div>
             <div class="shop-grid" id="shop-grid"></div>
-            <button onclick="document.getElementById('shop-overlay').classList.add('hidden')" style="margin-top:15px; background:var(--bg-input);">Отмена</button>
+            <button onclick="closeModal('shop-overlay')" style="margin-top:15px; background:var(--bg-input);">Отмена</button>
         </div>
     </div>
 
@@ -257,7 +256,7 @@
             <div style="font-size:12px; color:var(--text-muted); margin-bottom:5px;">Выберите участников:</div>
             <div id="group-members-list" style="max-height:150px; overflow-y:auto; margin-bottom:15px; border:1px solid var(--border); border-radius:8px;"></div>
             <button onclick="createGroup()">Создать</button>
-            <button onclick="document.getElementById('group-overlay').classList.add('hidden')" style="background:transparent; border:1px solid var(--border);">Отмена</button>
+            <button onclick="closeModal('group-overlay')" style="background:transparent; border:1px solid var(--border);">Отмена</button>
         </div>
     </div>
 
@@ -318,10 +317,61 @@
         let viewingUser = null;
         let currentUserBlocked = false;
 
-        const GIFT_ROSE = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M50 20 C30 20, 20 40, 30 60 C35 70, 50 80, 50 90 C50 80, 65 70, 70 60 C80 40, 70 20, 50 20 Z" fill="#E91E63"/><path d="M40 40 C35 50, 45 60, 50 60 C55 60, 65 50, 60 40 C55 30, 45 30, 40 40 Z" fill="#C2185B"/><path d="M50 90 L50 100" stroke="#4CAF50" stroke-width="4" stroke-linecap="round"/></svg>`;
-        const GIFT_DIAMOND = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><polygon points="50,10 90,40 50,90 10,40" fill="#00BCD4"/><polygon points="50,10 70,40 50,90 30,40" fill="#80DEEA" opacity="0.6"/><line x1="10" y1="40" x2="90" y2="40" stroke="#E0F7FA" stroke-width="2"/></svg>`;
-        const GIFT_BEAR = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="25" cy="25" r="15" fill="#8D6E63"/><circle cx="75" cy="25" r="15" fill="#8D6E63"/><circle cx="50" cy="55" r="35" fill="#A1887F"/><circle cx="35" cy="50" r="5" fill="#3E2723"/><circle cx="65" cy="50" r="5" fill="#3E2723"/><ellipse cx="50" cy="65" rx="12" ry="8" fill="#EFEBE9"/><circle cx="50" cy="62" r="3" fill="#3E2723"/></svg>`;
-        const GIFT_CROWN = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M15 70 L10 30 L35 50 L50 15 L65 50 L90 30 L85 70 Z" fill="#FFC107"/><rect x="15" y="70" width="70" height="15" fill="#FF8F00" rx="5"/><circle cx="50" cy="25" r="5" fill="#F44336"/><circle cx="25" cy="40" r="4" fill="#2196F3"/><circle cx="75" cy="40" r="4" fill="#2196F3"/></svg>`;
+        // --- УЛУЧШЕННЫЕ ДЕТАЛИЗИРОВАННЫЕ SVG ПОДАРКИ ---
+        const GIFT_ROSE = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <defs><radialGradient id="roseGrad" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#FF4081"/><stop offset="70%" stop-color="#C2185B"/><stop offset="100%" stop-color="#880E4F"/></radialGradient></defs>
+            <path d="M50 15 C20 15, 10 45, 30 65 C40 75, 50 85, 50 95 C50 85, 60 75, 70 65 C90 45, 80 15, 50 15 Z" fill="url(#roseGrad)"/>
+            <path d="M35 40 C25 55, 40 70, 50 70 C60 70, 75 55, 65 40 C55 25, 45 25, 35 40 Z" fill="#E91E63" opacity="0.8"/>
+            <path d="M45 50 C40 60, 50 65, 50 65 C50 65, 60 60, 55 50 C50 40, 45 40, 45 50 Z" fill="#880E4F"/>
+            <path d="M50 85 L50 105" stroke="#2E7D32" stroke-width="6" stroke-linecap="round"/>
+            <path d="M50 95 C40 90, 30 95, 25 100" stroke="#4CAF50" stroke-width="4" stroke-linecap="round" fill="none"/>
+        </svg>`;
+        
+        const GIFT_DIAMOND = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <linearGradient id="diaGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#E0FFFF"/><stop offset="50%" stop-color="#00BCD4"/><stop offset="100%" stop-color="#006064"/></linearGradient>
+                <linearGradient id="diaSide" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#80DEEA"/><stop offset="100%" stop-color="#00ACC1"/></linearGradient>
+            </defs>
+            <polygon points="50,5 95,40 50,95 5,40" fill="url(#diaGrad)"/>
+            <polygon points="50,5 75,40 50,95 25,40" fill="url(#diaSide)" opacity="0.6"/>
+            <line x1="5" y1="40" x2="95" y2="40" stroke="#E0FFFF" stroke-width="3"/>
+            <line x1="50" y1="5" x2="25" y2="40" stroke="#E0FFFF" stroke-width="1" opacity="0.5"/>
+            <line x1="50" y1="5" x2="75" y2="40" stroke="#E0FFFF" stroke-width="1" opacity="0.5"/>
+            <line x1="50" y1="95" x2="25" y2="40" stroke="#E0FFFF" stroke-width="1" opacity="0.5"/>
+            <line x1="50" y1="95" x2="75" y2="40" stroke="#E0FFFF" stroke-width="1" opacity="0.5"/>
+        </svg>`;
+
+        const GIFT_BEAR = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <defs><radialGradient id="bearGrad" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#D7CCC8"/><stop offset="70%" stop-color="#8D6E63"/><stop offset="100%" stop-color="#4E342E"/></radialGradient></defs>
+            <circle cx="25" cy="25" r="18" fill="#5D4037"/>
+            <circle cx="25" cy="25" r="10" fill="#A1887F"/>
+            <circle cx="75" cy="25" r="18" fill="#5D4037"/>
+            <circle cx="75" cy="25" r="10" fill="#A1887F"/>
+            <circle cx="50" cy="55" r="40" fill="url(#bearGrad)"/>
+            <circle cx="30" cy="45" r="6" fill="#3E2723"/>
+            <circle cx="70" cy="45" r="6" fill="#3E2723"/>
+            <circle cx="31" cy="44" r="2" fill="white"/>
+            <circle cx="71" cy="44" r="2" fill="white"/>
+            <ellipse cx="50" cy="65" rx="15" ry="10" fill="#EFEBE9"/>
+            <circle cx="50" cy="60" r="5" fill="#3E2723"/>
+            <path d="M45 70 Q50 75 55 70" stroke="#3E2723" stroke-width="2" fill="none"/>
+        </svg>`;
+
+        const GIFT_CROWN = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <linearGradient id="goldGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#FFF59D"/><stop offset="50%" stop-color="#FFC107"/><stop offset="100%" stop-color="#FF6F00"/></linearGradient>
+                <linearGradient id="baseGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#FFB300"/><stop offset="100%" stop-color="#E65100"/></linearGradient>
+            </defs>
+            <path d="M15 65 L5 25 L35 45 L50 10 L65 45 L95 25 L85 65 Z" fill="url(#goldGrad)"/>
+            <path d="M15 65 L85 65 L85 80 L15 80 Z" fill="url(#baseGrad)"/>
+            <circle cx="50" cy="22" r="7" fill="#F44336"/>
+            <circle cx="50" cy="22" r="3" fill="#FFCDD2"/>
+            <circle cx="20" cy="35" r="5" fill="#2196F3"/>
+            <circle cx="80" cy="35" r="5" fill="#2196F3"/>
+            <circle cx="35" cy="72" r="4" fill="#4CAF50"/>
+            <circle cx="50" cy="72" r="4" fill="#F44336"/>
+            <circle cx="65" cy="72" r="4" fill="#4CAF50"/>
+        </svg>`;
 
         const gifts = [
             { id: 'gift_rose', svg: GIFT_ROSE, price: 10 },
@@ -335,6 +385,17 @@
         function getGiftById(id) {
             const gift = gifts.find(g => g.id === id);
             return gift ? gift.svg : id;
+        }
+
+        // УНИВЕРСАЛЬНАЯ ФУНКЦИЯ ЗАКРЫТИЯ С АНИМАЦИЕЙ
+        function closeModal(id) {
+            const modal = document.getElementById(id);
+            if(!modal) return;
+            modal.classList.add('animate-out');
+            setTimeout(() => {
+                modal.classList.remove('animate-out');
+                modal.classList.add('hidden');
+            }, 250); // Ждем, пока закончится CSS-анимация (0.25s)
         }
 
         function updateBalanceUI() {
@@ -544,7 +605,7 @@
                     selectedAvatarBase64 = myUser.avatar;
                     updateBalanceUI();
                     alert('Профиль успешно обновлен!');
-                    document.getElementById('settings-overlay').classList.add('hidden');
+                    closeModal('settings-overlay');
                     openMyProfile(); 
                 }
 
@@ -564,7 +625,7 @@
 
                 if (data.type === 'chat_deleted') {
                     alert('Чат удален.');
-                    document.getElementById('profile-view-overlay').classList.add('hidden');
+                    closeModal('profile-view-overlay');
                     myContacts = myContacts.filter(c => c !== data.target);
                     if (currentChatId === data.target) {
                         closeChat();
@@ -579,7 +640,7 @@
                 }
                 if (data.type === 'group_created') {
                     ws.send(JSON.stringify({ type: 'get_groups' }));
-                    document.getElementById('group-overlay').classList.add('hidden');
+                    closeModal('group-overlay');
                 }
                 
                 if (data.type === 'promo_result') {
@@ -790,7 +851,7 @@
         }
 
         function openSettings() {
-            document.getElementById('profile-view-overlay').classList.add('hidden'); 
+            closeModal('profile-view-overlay'); 
             document.getElementById('settings-display-name').value = myUser.display_name;
             document.getElementById('settings-six-id').value = myUser.six_digit_id;
             document.getElementById('settings-bio').value = myUser.bio;
@@ -845,7 +906,7 @@
             
             ws.send(JSON.stringify({ type: 'private', from: myUser.username, to: currentChatId, text: giftId, isGift: true, giftPrice: price, comment: finalComment }));
             addGiftToScreen(giftId, "Вы", finalComment);
-            document.getElementById('shop-overlay').classList.add('hidden');
+            closeModal('shop-overlay');
         }
         
         function toggleBlock() {
