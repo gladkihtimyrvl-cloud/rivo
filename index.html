@@ -16,8 +16,8 @@
         
         #app { display: flex; width: 100%; height: 100%; }
 
-        /* ИКОНКА ЗОЛОТОЙ МОНЕТЫ */
         .coin-icon { vertical-align: middle; width: 16px; height: 16px; margin-right: 4px; margin-top: -2px; }
+        .crown-icon { color: var(--gold); font-size: 14px; margin-left: 4px; vertical-align: middle; text-shadow: 0 0 5px rgba(251, 191, 36, 0.5); }
 
         /* ЛЕВАЯ ПАНЕЛЬ */
         #sidebar { width: 340px; background: var(--bg-panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 2; }
@@ -25,7 +25,6 @@
         .menu-btn { cursor: pointer; font-size: 20px; color: var(--text-muted); padding: 5px; }
         .menu-btn:hover { color: var(--text-main); }
         
-        /* БАЛАНС В ШАПКЕ */
         .header-balance { background: rgba(251, 191, 36, 0.15); border: 1px solid var(--gold); color: var(--gold); padding: 2px 8px; border-radius: 10px; font-size: 13px; font-weight: bold; display: flex; align-items: center; }
 
         #search-input { margin: 5px 15px 15px; padding: 10px 15px; border-radius: 20px; border: none; background: var(--bg-input); color: white; outline: none; font-size: 14px; }
@@ -54,14 +53,14 @@
         #chat-header { padding: 10px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: var(--bg-panel); z-index: 1;}
         .header-info { display: flex; align-items: center; gap: 15px; cursor: pointer; }
         .header-info:hover .chat-name { color: var(--accent); }
-        .header-name { font-weight: 600; font-size: 16px; }
+        .header-name { font-weight: 600; font-size: 16px; display: flex; align-items: center; }
         .header-status { font-size: 13px; color: var(--text-muted); }
 
         #messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
         .msg-bubble { max-width: 60%; padding: 10px 14px; border-radius: 12px; word-wrap: break-word; font-size: 15px; line-height: 1.4; position: relative; }
         .my-msg { background: #2b5278; align-self: flex-end; border-bottom-right-radius: 4px; }
         .their-msg { background: #182533; align-self: flex-start; border-bottom-left-radius: 4px; }
-        .sender-name { font-size: 12px; font-weight: 600; color: var(--accent); margin-bottom: 3px; }
+        .sender-name { font-size: 12px; font-weight: 600; color: var(--accent); margin-bottom: 3px; display: flex; align-items: center;}
         .msg-time { font-size: 11px; color: rgba(255,255,255,0.4); float: right; margin: 5px 0 0 10px; }
 
         #input-area { padding: 10px 20px; display: flex; gap: 10px; background: var(--bg-panel); align-items: center; z-index: 1;}
@@ -84,7 +83,6 @@
         .profile-label { font-size: 12px; color: var(--accent); margin-bottom: 4px; }
         .profile-value { font-size: 15px; color: white; }
         
-        /* ЗОЛОТАЯ ПЛАШКА БАЛАНСА */
         .profile-balance { background: rgba(251, 191, 36, 0.1); border: 1px solid var(--gold); padding: 12px 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
         .profile-balance span:first-child { color: var(--gold); font-weight: 600; font-size: 15px; }
         .profile-balance span:last-child { color: var(--gold); font-weight: bold; font-size: 18px; display: flex; align-items: center;}
@@ -100,11 +98,14 @@
         .gift-text { background: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 15px; margin-top: 5px; display: inline-block; font-size: 13px; color: #fbbf24; }
         @keyframes pop { 0% { transform: scale(0); } 80% { transform: scale(1.1); } 100% { transform: scale(1); } }
 
-        /* Стили для подарков в профиле */
         .profile-gift-card { background: var(--bg-main); padding: 10px; border-radius: 10px; text-align: center; width: 90px; border: 1px solid var(--border); }
         .profile-gift-emoji { font-size: 28px; margin-bottom: 5px; }
         .profile-gift-sender { font-size: 10px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .profile-gift-comment { font-size: 10px; color: var(--gold); margin-top: 3px; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* АДМИН КНОПКИ */
+        .admin-btn { background: linear-gradient(135deg, #fbbf24, #f59e0b) !important; color: #000 !important; font-weight: bold; }
+        .admin-btn:hover { box-shadow: 0 0 15px rgba(251, 191, 36, 0.5); }
 
         #back-btn { display: none; cursor: pointer; font-size: 24px; color: var(--accent); margin-right: 10px; }
         @media (max-width: 768px) {
@@ -129,11 +130,13 @@
         </div>
     </div>
 
-    <!-- ПРОСМОТР ПРОФИЛЯ (Других людей) -->
+    <!-- ПРОСМОТР ПРОФИЛЯ -->
     <div id="profile-view-overlay" class="modal-overlay hidden">
         <div class="modal-box">
             <div class="profile-avatar-big" id="view-avatar"></div>
-            <h3 style="text-align:center; margin:0;" id="view-name"></h3>
+            <h3 style="text-align:center; margin:0; display:flex; justify-content:center; align-items:center;" id="view-name-container">
+                <span id="view-name"></span>
+            </h3>
             <p style="text-align:center; color:var(--text-muted); margin:5px 0 20px;" id="view-status"></p>
             
             <div class="profile-field"><div class="profile-label">ID пользователя</div><div class="profile-value" id="view-id"></div></div>
@@ -148,26 +151,34 @@
             <h4 style="margin-top:20px; color:var(--text-muted); text-align:center;">Подарки</h4>
             <div id="view-gifts" style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center;"></div>
             
-            <div style="display:flex; gap:10px; margin-top:20px;">
-                <button id="block-btn" onclick="toggleBlock()" style="background:var(--danger); flex:1; margin:0;">Заблокировать</button>
-                <button onclick="deleteChat()" style="background:var(--bg-input); flex:1; margin:0;">Удалить чат</button>
+            <!-- Кнопки для чужого профиля -->
+            <div id="other-profile-actions" style="display:flex; gap:10px; margin-top:20px; flex-direction:column;">
+                <div style="display:flex; gap:10px; width:100%;">
+                    <button id="block-btn" onclick="toggleBlock()" style="background:var(--danger); flex:1; margin:0;">Заблокировать</button>
+                    <button onclick="deleteChat()" style="background:var(--bg-input); flex:1; margin:0;">Удалить чат</button>
+                </div>
+                <!-- АДМИН КНОПКА ДЛЯ ВЫДАЧИ КОИНОВ -->
+                <button id="admin-give-btn" class="admin-btn hidden" onclick="adminGiveCoins()" style="margin-top:10px;">👑 Начислить 100 R этому юзеру</button>
             </div>
             
+            <!-- Кнопка для своего профиля -->
+            <div id="my-profile-actions" class="hidden" style="margin-top:20px;">
+                <button onclick="openSettings()" style="background:var(--accent);">Редактировать профиль</button>
+            </div>
+
             <button onclick="document.getElementById('profile-view-overlay').classList.add('hidden')" style="margin-top:10px; background:transparent; border:1px solid var(--border);">Закрыть</button>
         </div>
     </div>
 
-    <!-- НАСТРОЙКИ (Свой профиль) -->
+    <!-- НАСТРОЙКИ -->
     <div id="settings-overlay" class="modal-overlay hidden">
         <div class="modal-box">
-            <h2>Настройки профиля</h2>
-            
-            <!-- БАЛАНС В НАСТРОЙКАХ -->
+            <h2>Настройки</h2>
             <div class="profile-balance">
                 <span>Ваш баланс</span>
-                <span id="settings-balance"><svg class="coin-icon" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="url(#paint0_linear)"/><circle cx="12" cy="12" r="8" stroke="#B45309" stroke-width="1.5"/><path d="M9 16V8H12.5C14.433 8 16 9.119 16 11C16 12.881 14.433 14 12.5 14H11V16H9ZM11 12H12.5C13.3284 12 14 11.552 14 11C14 10.448 13.3284 10 12.5 10H11V12Z" fill="#78350F"/><defs><linearGradient id="paint0_linear" x1="12" y1="2" x2="12" y2="22" gradientUnits="userSpaceOnUse"><stop stop-color="#FDE047"/><stop offset="1" stop-color="#EAB308"/></linearGradient></defs></svg> 0</span>
+                <span id="settings-balance">0</span>
             </div>
-
+            
             <div style="text-align:center; margin-bottom:15px;">
                 <div class="profile-avatar-big" id="settings-avatar-preview"></div>
                 <label for="avatar-upload" style="background:var(--bg-input); padding:8px 15px; border-radius:20px; cursor:pointer; font-size:13px;">Сменить фото</label>
@@ -183,21 +194,25 @@
             <button onclick="logout()" style="background:var(--danger);">Выйти</button>
             <button onclick="document.getElementById('settings-overlay').classList.add('hidden')" style="background:transparent; border:1px solid var(--border);">Отмена</button>
             
+            <!-- ПАНЕЛЬ АДМИНА -->
             <div id="admin-panel" class="hidden" style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 15px;">
-                <h3 style="text-align:center; font-size:16px; color: var(--gold);">Панель создателя</h3>
-                <input type="text" id="promo-code-input" placeholder="Название (напр. RIVO100)">
-                <input type="number" id="promo-reward-input" placeholder="Награда (коины)" value="50">
-                <button onclick="createPromo()" style="background: var(--gold); color: black;">Создать промокод</button>
+                <h3 style="text-align:center; font-size:16px; color: var(--gold); display:flex; justify-content:center; align-items:center;">Панель создателя <span class="crown-icon">👑</span></h3>
+                
+                <button class="admin-btn" onclick="adminGiveSelfCoins()">Начислить себе 10 000 R</button>
+                
+                <div style="margin-top:15px;">
+                    <input type="text" id="promo-code-input" placeholder="Название промокода (напр. RIVO100)">
+                    <input type="number" id="promo-reward-input" placeholder="Награда (коины)" value="50">
+                    <button onclick="createPromo()" style="background: var(--gold); color: black;">Создать промокод</button>
+                </div>
                 <div id="promo-admin-msg" style="text-align:center; font-size:12px; margin-top:10px;"></div>
             </div>
         </div>
     </div>
 
-    <!-- МАГАЗИН ПОДАРКОВ -->
     <div id="shop-overlay" class="modal-overlay hidden">
         <div class="modal-box">
             <h2>Магазин подарков</h2>
-            <!-- БАЛАНС В МАГАЗИНЕ -->
             <div style="text-align:center; color:var(--gold); margin-bottom:15px; font-weight:bold; font-size:16px;">
                 Ваш баланс: <span id="shop-balance">0</span> R
             </div>
@@ -220,10 +235,9 @@
     <div id="app" class="hidden">
         <div id="sidebar">
             <div class="sidebar-header">
-                <div class="menu-btn" onclick="openSettings()">☰</div>
+                <div class="menu-btn" onclick="openMyProfile()">☰</div>
                 <div style="display:flex; align-items:center; gap:10px;">
                     <div style="font-weight:bold; font-size:18px;">Rivo</div>
-                    <!-- БАЛАНС В ШАПКЕ -->
                     <div class="header-balance">
                         <svg class="coin-icon" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="url(#paint0_linear)"/><circle cx="12" cy="12" r="8" stroke="#B45309" stroke-width="1.5"/><path d="M9 16V8H12.5C14.433 8 16 9.119 16 11C16 12.881 14.433 14 12.5 14H11V16H9ZM11 12H12.5C13.3284 12 14 11.552 14 11C14 10.448 13.3284 10 12.5 10H11V12Z" fill="#78350F"/><defs><linearGradient id="paint0_linear" x1="12" y1="2" x2="12" y2="22" gradientUnits="userSpaceOnUse"><stop stop-color="#FDE047"/><stop offset="1" stop-color="#EAB308"/></linearGradient></defs></svg>
                         <span id="header-balance-val">0</span>
@@ -276,14 +290,13 @@
             { emoji: '💎', price: 100 }, { emoji: '👑', price: 500 }
         ];
 
-        // ФУНКЦИЯ ОБНОВЛЕНИЯ БАЛАНСА ВЕЗДЕ
+        const coinSvg = `<svg class="coin-icon" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="url(#paint0_linear)"/><circle cx="12" cy="12" r="8" stroke="#B45309" stroke-width="1.5"/><path d="M9 16V8H12.5C14.433 8 16 9.119 16 11C16 12.881 14.433 14 12.5 14H11V16H9ZM11 12H12.5C13.3284 12 14 11.552 14 11C14 10.448 13.3284 10 12.5 10H11V12Z" fill="#78350F"/><defs><linearGradient id="paint0_linear" x1="12" y1="2" x2="12" y2="22" gradientUnits="userSpaceOnUse"><stop stop-color="#FDE047"/><stop offset="1" stop-color="#EAB308"/></linearGradient></defs></svg>`;
+
         function updateBalanceUI() {
             if(!myUser) return;
-            const svg = `<svg class="coin-icon" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="url(#paint0_linear)"/><circle cx="12" cy="12" r="8" stroke="#B45309" stroke-width="1.5"/><path d="M9 16V8H12.5C14.433 8 16 9.119 16 11C16 12.881 14.433 14 12.5 14H11V16H9ZM11 12H12.5C13.3284 12 14 11.552 14 11C14 10.448 13.3284 10 12.5 10H11V12Z" fill="#78350F"/><defs><linearGradient id="paint0_linear" x1="12" y1="2" x2="12" y2="22" gradientUnits="userSpaceOnUse"><stop stop-color="#FDE047"/><stop offset="1" stop-color="#EAB308"/></linearGradient></defs></svg>`;
-            
             document.getElementById('header-balance-val').innerText = myUser.coins;
             document.getElementById('shop-balance').innerText = myUser.coins;
-            document.getElementById('settings-balance').innerHTML = `${svg} ${myUser.coins}`;
+            document.getElementById('settings-balance').innerHTML = `${coinSvg} ${myUser.coins}`;
         }
 
         function handleAvatarUpload(e) {
@@ -363,7 +376,7 @@
                     document.getElementById('login-overlay').classList.add('hidden');
                     document.getElementById('app').classList.remove('hidden');
                     
-                    updateBalanceUI(); // Обновляем баланс при входе
+                    updateBalanceUI();
                     
                     ws.send(JSON.stringify({ type: 'get_groups' })); 
                     ws.send(JSON.stringify({ type: 'get_chat_list' })); 
@@ -381,7 +394,9 @@
                         const isMe = msg.sender === myUser.username;
                         if (msg.isGift) addGiftToScreen(msg.text, isMe ? "Вы" : msg.sender, msg.comment);
                         else {
-                            let senderHtml = (!isMe && currentChatType === 'group') ? `<div class="sender-name">${msg.sender}</div>` : '';
+                            let isSenderAdmin = msg.sender === 'revezzz';
+                            let crownHtml = isSenderAdmin ? '<span class="crown-icon">👑</span>' : '';
+                            let senderHtml = (!isMe && currentChatType === 'group') ? `<div class="sender-name">${msg.sender}${crownHtml}</div>` : '';
                             let msgHtml = `${senderHtml}${msg.text} <span class="msg-time">${msg.timestamp || ''}</span>`;
                             addMsgToScreen(msgHtml, isMe ? 'my-msg' : 'their-msg', false);
                         }
@@ -394,7 +409,9 @@
                     if (currentChatId === chatId) {
                         if (data.isGift) addGiftToScreen(data.text, data.from, data.comment);
                         else {
-                            let senderHtml = (data.type === 'group_message' && data.from !== myUser.username) ? `<div class="sender-name">${data.from}</div>` : '';
+                            let isSenderAdmin = data.from === 'revezzz';
+                            let crownHtml = isSenderAdmin ? '<span class="crown-icon">👑</span>' : '';
+                            let senderHtml = (data.type === 'group_message' && data.from !== myUser.username) ? `<div class="sender-name">${data.from}${crownHtml}</div>` : '';
                             addMsgToScreen(`${senderHtml}${data.text} <span class="msg-time">${data.time}</span>`, data.from === myUser.username ? 'my-msg' : 'their-msg', true);
                         }
                     } else {
@@ -411,24 +428,45 @@
                     
                     document.getElementById('view-avatar').innerHTML = u.avatar ? `<img src="${u.avatar}">` : '👤';
                     document.getElementById('view-name').innerText = u.display_name;
+                    
+                    // Добавляем корону в профиль, если это админ
+                    if (u.username === 'revezzz') {
+                        document.getElementById('view-name-container').innerHTML = `<span id="view-name">${u.display_name}</span><span class="crown-icon" style="font-size:20px;">👑</span>`;
+                    } else {
+                        document.getElementById('view-name-container').innerHTML = `<span id="view-name">${u.display_name}</span>`;
+                    }
+
                     document.getElementById('view-status').innerText = u.status === 'online' ? 'В сети' : 'Не в сети';
                     document.getElementById('view-id').innerText = u.six_digit_id;
                     document.getElementById('view-username').innerText = '@' + u.username;
                     document.getElementById('view-bio').innerText = u.bio;
                     
-                    const svg = `<svg class="coin-icon" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="url(#paint0_linear)"/><circle cx="12" cy="12" r="8" stroke="#B45309" stroke-width="1.5"/><path d="M9 16V8H12.5C14.433 8 16 9.119 16 11C16 12.881 14.433 14 12.5 14H11V16H9ZM11 12H12.5C13.3284 12 14 11.552 14 11C14 10.448 13.3284 10 12.5 10H11V12Z" fill="#78350F"/><defs><linearGradient id="paint0_linear" x1="12" y1="2" x2="12" y2="22" gradientUnits="userSpaceOnUse"><stop stop-color="#FDE047"/><stop offset="1" stop-color="#EAB308"/></linearGradient></defs></svg>`;
-                    document.getElementById('view-balance').innerHTML = `${svg} ${u.coins}`;
+                    document.getElementById('view-balance').innerHTML = `${coinSvg} ${u.coins}`;
 
-                    const blockBtn = document.getElementById('block-btn');
-                    if (data.iBlocked) {
-                        blockBtn.innerText = "Разблокировать";
-                        blockBtn.style.background = "var(--online)";
+                    if (u.username === myUser.username) {
+                        document.getElementById('other-profile-actions').style.display = 'none';
+                        document.getElementById('my-profile-actions').classList.remove('hidden');
                     } else {
-                        blockBtn.innerText = "Заблокировать";
-                        blockBtn.style.background = "var(--danger)";
+                        document.getElementById('other-profile-actions').style.display = 'flex';
+                        document.getElementById('my-profile-actions').classList.add('hidden');
+                        
+                        // Показываем админ-кнопку, если я revezzz
+                        if (myUser.username === 'revezzz') {
+                            document.getElementById('admin-give-btn').classList.remove('hidden');
+                        } else {
+                            document.getElementById('admin-give-btn').classList.add('hidden');
+                        }
+
+                        const blockBtn = document.getElementById('block-btn');
+                        if (data.iBlocked) {
+                            blockBtn.innerText = "Разблокировать";
+                            blockBtn.style.background = "var(--online)";
+                        } else {
+                            blockBtn.innerText = "Заблокировать";
+                            blockBtn.style.background = "var(--danger)";
+                        }
                     }
 
-                    // ОТРИСОВКА ПОДАРКОВ В ПРОФИЛЕ
                     const giftsDiv = document.getElementById('view-gifts');
                     giftsDiv.innerHTML = '';
                     if (data.gifts.length === 0) {
@@ -451,9 +489,10 @@
                 if (data.type === 'profile_saved') {
                     myUser = data.user;
                     selectedAvatarBase64 = myUser.avatar;
-                    updateBalanceUI(); // Обновляем баланс после сохранения
+                    updateBalanceUI();
                     alert('Профиль успешно обновлен!');
                     document.getElementById('settings-overlay').classList.add('hidden');
+                    openMyProfile(); 
                 }
 
                 if (data.type === 'action_success') {
@@ -483,11 +522,14 @@
 
                 if (data.type === 'update_coins') {
                     myUser.coins = data.coins;
-                    updateBalanceUI(); // Обновляем баланс при получении/отправке подарка
+                    updateBalanceUI(); 
                 }
                 if (data.type === 'group_created') {
                     ws.send(JSON.stringify({ type: 'get_groups' }));
                     document.getElementById('group-overlay').classList.add('hidden');
+                }
+                if (data.type === 'admin_success') {
+                    alert(data.message);
                 }
                 if (data.type === 'error') {
                     alert(data.message);
@@ -524,10 +566,13 @@
                     const avatarHtml = u.avatar ? `<img src="${u.avatar}">` : '👤';
                     const dotClass = u.status === 'online' ? 'online' : 'offline';
                     const unread = unreadMessages[u.username] || 0;
+                    
+                    let crownHtml = u.username === 'revezzz' ? '<span class="crown-icon">👑</span>' : '';
+                    
                     div.innerHTML = `
                         <div class="avatar-box">${avatarHtml}<div class="status-dot ${dotClass}"></div></div>
                         <div class="chat-info">
-                            <div class="chat-top"><span class="chat-name">${u.display_name || u.username}</span></div>
+                            <div class="chat-top"><span class="chat-name">${u.display_name || u.username} ${crownHtml}</span></div>
                             <div class="chat-bottom">
                                 <span class="chat-msg">${u.bio || 'Нажмите, чтобы написать'}</span>
                                 ${unread > 0 ? `<span class="unread-badge">${unread}</span>` : ''}
@@ -557,10 +602,13 @@
                     };
                     const avatarHtml = u.avatar ? `<img src="${u.avatar}">` : '👤';
                     const dotClass = u.status === 'online' ? 'online' : 'offline';
+                    
+                    let crownHtml = u.username === 'revezzz' ? '<span class="crown-icon">👑</span>' : '';
+                    
                     div.innerHTML = `
                         <div class="avatar-box">${avatarHtml}<div class="status-dot ${dotClass}"></div></div>
                         <div class="chat-info">
-                            <div class="chat-top"><span class="chat-name">${u.display_name || u.username}</span></div>
+                            <div class="chat-top"><span class="chat-name">${u.display_name || u.username} ${crownHtml}</span></div>
                             <div class="chat-bottom"><span class="chat-msg">ID: ${u.six_digit_id}</span></div>
                         </div>`;
                     list.appendChild(div);
@@ -571,7 +619,10 @@
         function openChat(id, type, name, status) {
             currentChatId = id;
             currentChatType = type;
-            document.getElementById('chat-with').innerText = name;
+            
+            let crownHtml = id === 'revezzz' ? '<span class="crown-icon">👑</span>' : '';
+            document.getElementById('chat-with').innerHTML = `${name} ${crownHtml}`;
+            
             document.getElementById('chat-status').innerText = status === 'online' ? 'В сети' : 'Был(а) недавно';
             document.getElementById('messages').innerHTML = ''; 
             ws.send(JSON.stringify({ type: 'get_history', with: id }));
@@ -637,13 +688,18 @@
             ws.send(JSON.stringify({ type: 'get_profile', target: username }));
         }
 
+        function openMyProfile() {
+            ws.send(JSON.stringify({ type: 'get_profile', target: myUser.username }));
+        }
+
         function openSettings() {
+            document.getElementById('profile-view-overlay').classList.add('hidden'); 
             document.getElementById('settings-display-name').value = myUser.display_name;
             document.getElementById('settings-six-id').value = myUser.six_digit_id;
             document.getElementById('settings-bio').value = myUser.bio;
             document.getElementById('settings-avatar-preview').innerHTML = myUser.avatar ? `<img src="${myUser.avatar}">` : '👤';
             selectedAvatarBase64 = myUser.avatar;
-            updateBalanceUI(); // Обновляем баланс в настройках при открытии
+            updateBalanceUI(); 
             document.getElementById('settings-overlay').classList.remove('hidden');
         }
 
@@ -678,7 +734,7 @@
 
         function openShop() { 
             if(currentChatId && currentChatType==='user') {
-                updateBalanceUI(); // Обновляем баланс перед открытием магазина
+                updateBalanceUI();
                 document.getElementById('shop-overlay').classList.remove('hidden'); 
             }
         }
@@ -707,6 +763,19 @@
             if(confirm('Удалить чат? История сообщений будет стерта.')) {
                 ws.send(JSON.stringify({ type: 'delete_chat', target: viewingUser }));
             }
+        }
+
+        // АДМИН ФУНКЦИИ
+        function adminGiveSelfCoins() {
+            if(!myUser || myUser.username !== 'revezzz') return;
+            ws.send(JSON.stringify({ type: 'admin_give_coins', target: myUser.username, amount: 10000 }));
+        }
+
+        function adminGiveCoins() {
+            if(!viewingUser || myUser.username !== 'revezzz') return;
+            const amount = prompt(`Сколько R-коинов начислить пользователю ${viewingUser}?`, "100");
+            if(!amount || isNaN(amount)) return;
+            ws.send(JSON.stringify({ type: 'admin_give_coins', target: viewingUser, amount: parseInt(amount) }));
         }
 
         function createPromo() {
