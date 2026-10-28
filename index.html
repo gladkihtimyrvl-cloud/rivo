@@ -26,7 +26,10 @@
         
         .header-balance { background: rgba(251, 191, 36, 0.15); border: 1px solid var(--gold); color: var(--gold); padding: 2px 8px; border-radius: 10px; font-size: 13px; font-weight: bold; display: flex; align-items: center; }
 
-        #search-input { margin: 5px 15px 15px; padding: 10px 15px; border-radius: 20px; border: none; background: var(--bg-input); color: white; outline: none; font-size: 14px; }
+        .search-container { position: relative; margin: 5px 15px 15px; }
+        #search-input { width: 100%; padding: 10px 35px 10px 15px; border-radius: 20px; border: none; background: var(--bg-input); color: white; outline: none; font-size: 14px; }
+        #clear-search { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--text-muted); display: none; font-size: 18px; }
+        #clear-search:hover { color: white; }
 
         #chat-list { flex: 1; overflow-y: auto; }
         .chat-item { padding: 10px 15px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: 0.1s; }
@@ -235,7 +238,13 @@
                 </div>
                 <div class="menu-btn" onclick="openCreateGroup()">➕</div>
             </div>
-            <input type="text" id="search-input" placeholder="Поиск (имя, @юзер или ID)..." oninput="renderChats()">
+            
+            <!-- УЛУЧШЕННЫЙ ПОИСК -->
+            <div class="search-container">
+                <input type="text" id="search-input" placeholder="Поиск (имя, @юзер или ID)..." oninput="onSearchInput()">
+                <span id="clear-search" onclick="clearSearch()">×</span>
+            </div>
+            
             <div id="chat-list"></div>
         </div>
 
@@ -333,6 +342,19 @@
 
         function logout() { localStorage.removeItem('rivo_user'); localStorage.removeItem('rivo_pass'); location.reload(); }
         function toggleAuthMode() { isLoginMode = !isLoginMode; document.getElementById('main-auth-btn').innerText = isLoginMode ? 'Войти' : 'Создать аккаунт'; document.getElementById('switch-text').innerText = isLoginMode ? 'Нет аккаунта? Зарегистрироваться' : 'Уже есть аккаунт? Войти'; document.getElementById('auth-error').innerText = ''; }
+
+        // ФИКС ПОИСКА: Показываем крестик и вызываем рендер
+        function onSearchInput() {
+            const val = document.getElementById('search-input').value;
+            document.getElementById('clear-search').style.display = val.length > 0 ? 'block' : 'none';
+            renderChats();
+        }
+        
+        function clearSearch() {
+            document.getElementById('search-input').value = '';
+            document.getElementById('clear-search').style.display = 'none';
+            renderChats();
+        }
 
         function submitAuth() {
             const user = document.getElementById('auth-username').value.trim();
@@ -452,10 +474,11 @@
                         data.gifts.forEach(g => {
                             const div = document.createElement('div');
                             div.className = 'profile-gift-card';
+                            let giftComment = (g.comment && g.comment !== 'undefined') ? `<div class="profile-gift-comment" title="${g.comment}">"${g.comment}"</div>` : '';
                             div.innerHTML = `
                                 <div class="profile-gift-emoji">${g.gift_emoji}</div>
                                 <div class="profile-gift-sender">от ${g.sender}</div>
-                                ${g.comment ? `<div class="profile-gift-comment" title="${g.comment}">"${g.comment}"</div>` : ''}
+                                ${giftComment}
                             `;
                             giftsDiv.appendChild(div);
                         });
@@ -560,20 +583,23 @@
                     list.innerHTML = '<div class="search-hint">У вас пока нет чатов.<br>Введите ID или @юзернейм в поиск, чтобы найти друга.</div>';
                 }
             } else {
+                let found = 0;
                 allUsers.filter(u => {
                     if (u.username === myUser.username) return false;
                     const uName = u.username ? u.username.toLowerCase() : '';
                     const uId = u.six_digit_id ? u.six_digit_id.toString() : '';
                     const uDisplay = u.display_name ? u.display_name.toLowerCase() : '';
+                    
+                    // Ищем по всем параметрам
                     return uName.includes(query) || uId.includes(query) || uDisplay.includes(query);
                 }).forEach(u => {
+                    found++;
                     const div = document.createElement('div');
                     div.className = 'chat-item';
                     div.onclick = () => {
                         if (!myContacts.includes(u.username)) myContacts.push(u.username);
                         openChat(u.username, 'user', u.display_name || u.username, u.status);
-                        document.getElementById('search-input').value = '';
-                        renderChats();
+                        clearSearch();
                     };
                     const avatarHtml = u.avatar ? `<img src="${u.avatar}">` : '👤';
                     const dotClass = u.status === 'online' ? 'online' : 'offline';
@@ -586,6 +612,10 @@
                         </div>`;
                     list.appendChild(div);
                 });
+
+                if (found === 0) {
+                    list.innerHTML = '<div class="search-hint">Никого не найдено. Проверьте правильность ввода.</div>';
+                }
             }
         }
 
@@ -645,10 +675,19 @@
             if(scroll) document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
         }
 
+        // ИСПРАВЛЕНО: Проверка на undefined
         function addGiftToScreen(emoji, senderName, comment) {
             const div = document.createElement('div');
             div.className = 'gift-event';
-            div.innerHTML = `<div class="gift-icon">${emoji}</div><div class="gift-text">${senderName} дарит подарок!<br>«${comment}»</div>`;
+            let wishText = (comment && comment !== 'undefined') ? `«${comment}»` : '';
+            
+            div.innerHTML = `
+                <div class="gift-icon">${emoji}</div>
+                <div class="gift-text">
+                    ${senderName} дарит подарок!
+                    ${wishText ? `<br>${wishText}` : ''}
+                </div>
+            `;
             document.getElementById('messages').appendChild(div);
             document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
         }
@@ -712,8 +751,12 @@
         function buyGift(emoji, price) {
             const comment = prompt("Пожелание к подарку:", "Спасибо!");
             if(comment === null) return;
-            ws.send(JSON.stringify({ type: 'private', from: myUser.username, to: currentChatId, text: emoji, isGift: true, giftPrice: price, comment: comment }));
-            addGiftToScreen(emoji, "Вы", comment);
+            
+            // Отправляем пустую строку, если ничего не ввели, чтобы не было undefined
+            const finalComment = comment.trim() === '' ? '' : comment;
+            
+            ws.send(JSON.stringify({ type: 'private', from: myUser.username, to: currentChatId, text: emoji, isGift: true, giftPrice: price, comment: finalComment }));
+            addGiftToScreen(emoji, "Вы", finalComment);
             document.getElementById('shop-overlay').classList.add('hidden');
         }
         
