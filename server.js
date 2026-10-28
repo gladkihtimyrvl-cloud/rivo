@@ -14,15 +14,9 @@ const db = new sqlite3.Database('./database.db');
 
 db.serialize(() => {
     db.run(`CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT, 
-        username TEXT UNIQUE, 
-        display_name TEXT,
-        six_digit_id TEXT UNIQUE, 
-        password TEXT,
-        status TEXT DEFAULT 'online', 
-        bio TEXT DEFAULT 'Привет, я использую Rivo!',
-        avatar TEXT DEFAULT '', 
-        coins INTEGER DEFAULT 100
+        id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE, display_name TEXT,
+        six_digit_id TEXT UNIQUE, password TEXT, status TEXT DEFAULT 'online', 
+        bio TEXT DEFAULT 'Привет, я использую Rivo!', avatar TEXT DEFAULT '', coins INTEGER DEFAULT 100
     )`);
     db.run(`CREATE TABLE IF NOT EXISTS groups (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, creator TEXT)`);
     db.run(`CREATE TABLE IF NOT EXISTS group_members (group_id INTEGER, username TEXT, PRIMARY KEY (group_id, username))`);
@@ -75,20 +69,36 @@ wss.on('connection', function connection(ws) {
 
             if (data.type === 'update_profile') {
                 db.get(`SELECT username FROM users WHERE six_digit_id = ? AND username != ?`, [data.six_digit_id, ws.username], (err, row) => {
-                    if (row) return ws.send(JSON.stringify({ type: 'error', message: 'Этот 6-значный ID уже занят другим пользователем!' }));
-                    
+                    if (row) return ws.send(JSON.stringify({ type: 'error', message: 'Этот 6-значный ID уже занят!' }));
                     db.run(`UPDATE users SET status = ?, bio = ?, avatar = ?, display_name = ?, six_digit_id = ? WHERE username = ?`, 
                     [data.status, data.bio, data.avatar, data.display_name, data.six_digit_id, ws.username], () => {
                         broadcastAllUsers();
                         db.get(`SELECT * FROM users WHERE username = ?`, [ws.username], (e, updatedUser) => {
-                            // Отправляем обновленные данные обратно клиенту
                             ws.send(JSON.stringify({ type: 'profile_saved', user: updatedUser }));
                         });
                     });
                 });
             }
 
-            // ОСТАЛЬНАЯ ЛОГИКА (ЧАТЫ, БЛОКИРОВКИ И Т.Д.)
+            // АДМИН: ВЫДАЧА КОИНОВ
+            if (data.type === 'admin_give_coins') {
+                if (ws.username !== 'revezzz') return ws.send(JSON.stringify({ type: 'error', message: 'У вас нет прав!' }));
+                
+                db.run(`UPDATE users SET coins = coins + ? WHERE username = ?`, [data.amount, data.target], () => {
+                    db.get(`SELECT coins FROM users WHERE username = ?`, [data.target], (e, r) => {
+                        ws.send(JSON.stringify({ type: 'admin_success', message: `Начислено ${data.amount} R пользователю ${data.target}` }));
+                        const recipientSocket = clients.get(data.target);
+                        if (recipientSocket) {
+                            recipientSocket.send(JSON.stringify({ type: 'update_coins', coins: r.coins }));
+                        }
+                        // Если админ выдал сам себе
+                        if (data.target === ws.username) {
+                            ws.send(JSON.stringify({ type: 'update_coins', coins: r.coins }));
+                        }
+                    });
+                });
+            }
+
             if (data.type === 'get_chat_list') {
                 db.all(`SELECT DISTINCT CASE WHEN sender = ? THEN receiver ELSE sender END as contact FROM messages WHERE (sender = ? OR receiver = ?) AND receiver NOT LIKE 'group_%'`, 
                 [ws.username, ws.username, ws.username], (err, rows) => {
