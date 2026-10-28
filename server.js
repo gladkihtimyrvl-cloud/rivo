@@ -20,7 +20,6 @@ db.serialize(() => {
     )`);
     db.run(`CREATE TABLE IF NOT EXISTS groups (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, creator TEXT)`);
     db.run(`CREATE TABLE IF NOT EXISTS group_members (group_id INTEGER, username TEXT, PRIMARY KEY (group_id, username))`);
-    // ДОБАВИЛИ КОЛОНКУ comment В ТАБЛИЦУ СООБЩЕНИЙ
     db.run(`CREATE TABLE IF NOT EXISTS messages (
         id INTEGER PRIMARY KEY AUTOINCREMENT, sender TEXT, receiver TEXT, 
         text TEXT, isGift INTEGER, comment TEXT, timestamp TEXT
@@ -28,6 +27,13 @@ db.serialize(() => {
     db.run(`CREATE TABLE IF NOT EXISTS received_gifts (id INTEGER PRIMARY KEY AUTOINCREMENT, sender TEXT, receiver TEXT, gift_emoji TEXT, comment TEXT, timestamp TEXT)`);
     db.run(`CREATE TABLE IF NOT EXISTS promocodes (code TEXT UNIQUE, reward INTEGER, max_uses INTEGER, current_uses INTEGER DEFAULT 0)`);
     db.run(`CREATE TABLE IF NOT EXISTS blocks (blocker TEXT, blocked TEXT, PRIMARY KEY (blocker, blocked))`);
+    
+    // НОВАЯ ТАБЛИЦА: История активаций промокодов
+    db.run(`CREATE TABLE IF NOT EXISTS promo_history (
+        username TEXT, 
+        code TEXT, 
+        PRIMARY KEY (username, code)
+    )`);
 });
 
 const clients = new Map(); 
@@ -163,7 +169,6 @@ wss.on('connection', function connection(ws) {
                 });
             }
             
-            // ИСПРАВЛЕНО: СОХРАНЯЕМ КОММЕНТАРИЙ В БАЗУ
             if (data.type === 'private' && data.isGift) {
                 db.get(`SELECT coins FROM users WHERE username = ?`, [ws.username], (err, row) => {
                     if (row.coins < data.giftPrice) return ws.send(JSON.stringify({ type: 'error', message: 'Недостаточно R-коинов!' }));
@@ -173,7 +178,6 @@ wss.on('connection', function connection(ws) {
                             const time = new Date().toLocaleTimeString();
                             const comment = data.comment || "";
                             
-                            // ДОБАВИЛИ comment
                             db.run(`INSERT INTO messages (sender, receiver, text, isGift, comment, timestamp) VALUES (?, ?, ?, 1, ?, ?)`, [data.from, data.to, data.text, comment, time]);
                             db.run(`INSERT INTO received_gifts (sender, receiver, gift_emoji, comment, timestamp) VALUES (?, ?, ?, ?, ?)`, [data.from, data.to, data.text, comment, time]);
                             
@@ -212,16 +216,25 @@ wss.on('connection', function connection(ws) {
                 });
             }
 
+            // ОБНОВЛЕННАЯ АКТИВАЦИЯ ПРОМОКОДА
             if (data.type === 'redeem_promo') {
                 const code = data.code.toUpperCase();
                 db.get(`SELECT * FROM promocodes WHERE code = ?`, [code], (err, row) => {
                     if (err || !row) return ws.send(JSON.stringify({ type: 'promo_result', success: false, message: 'Промокод не найден!' }));
                     if (row.current_uses >= row.max_uses) return ws.send(JSON.stringify({ type: 'promo_result', success: false, message: 'Лимит исчерпан!' }));
-                    db.run(`UPDATE promocodes SET current_uses = current_uses + 1 WHERE code = ?`, [code]);
-                    db.run(`UPDATE users SET coins = coins + ? WHERE username = ?`, [row.reward, ws.username], () => {
-                        db.get(`SELECT coins FROM users WHERE username = ?`, [ws.username], (e, r) => {
-                            ws.send(JSON.stringify({ type: 'promo_result', success: true, message: `+${row.reward} R-коинов!`, newBalance: r.coins }));
-                            broadcastAllUsers();
+                    
+                    // ПРОВЕРЯЕМ, НЕ ИСПОЛЬЗОВАЛ ЛИ ЭТОТ ЧЕЛОВЕК УЖЕ ЭТОТ КОД
+                    db.get(`SELECT * FROM promo_history WHERE username = ? AND code = ?`, [ws.username, code], (err, used) => {
+                        if (used) return ws.send(JSON.stringify({ type: 'promo_result', success: false, message: 'Вы уже активировали этот промокод!' }));
+
+                        // ЕСЛИ НЕ ИСПОЛЬЗОВАЛ - ЗАПИСЫВАЕМ И НАЧИСЛЯЕМ
+                        db.run(`INSERT INTO promo_history (username, code) VALUES (?, ?)`, [ws.username, code]);
+                        db.run(`UPDATE promocodes SET current_uses = current_uses + 1 WHERE code = ?`, [code]);
+                        db.run(`UPDATE users SET coins = coins + ? WHERE username = ?`, [row.reward, ws.username], () => {
+                            db.get(`SELECT coins FROM users WHERE username = ?`, [ws.username], (e, r) => {
+                                ws.send(JSON.stringify({ type: 'promo_result', success: true, message: `+${row.reward} R-коинов!`, newBalance: r.coins }));
+                                broadcastAllUsers();
+                            });
                         });
                     });
                 });
