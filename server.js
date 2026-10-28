@@ -13,11 +13,12 @@ const wss = new WebSocket.Server({ server });
 const db = new sqlite3.Database('./database.db');
 
 db.serialize(() => {
+    // ВАЖНО: six_digit_id и username имеют ограничение UNIQUE
     db.run(`CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT, 
         username TEXT UNIQUE, 
         display_name TEXT,
-        six_digit_id TEXT UNIQUE,
+        six_digit_id TEXT UNIQUE, 
         password TEXT,
         status TEXT DEFAULT 'online', 
         bio TEXT DEFAULT 'Привет, я использую Rivo!',
@@ -37,6 +38,21 @@ db.serialize(() => {
     )`);
 });
 
+// ФУНКЦИЯ ГЕНЕРАЦИИ УНИКАЛЬНОГО ID
+function generateUniqueId(callback) {
+    const newId = Math.floor(100000 + Math.random() * 900000).toString();
+    // Проверяем, есть ли такой ID в базе
+    db.get(`SELECT id FROM users WHERE six_digit_id = ?`, [newId], (err, row) => {
+        if (row) {
+            // Если занят, вызываем функцию заново (рекурсия)
+            generateUniqueId(callback);
+        } else {
+            // Если свободен — отдаем его
+            callback(newId);
+        }
+    });
+}
+
 const clients = new Map(); 
 
 wss.on('connection', function connection(ws) {
@@ -44,34 +60,49 @@ wss.on('connection', function connection(ws) {
         try {
             const data = JSON.parse(message);
 
+            // 1. РЕГИСТРАЦИЯ
             if (data.type === 'register') {
                 const cleanUsername = data.username.trim(); 
-                const hash = bcrypt.hashSync(data.password, 10);
                 
-                // Генерируем уникальный 6-значный ID
-                let newId;
-                let isUnique = false;
-                while (!isUnique) {
-                    newId = Math.floor(100000 + Math.random() * 900000).toString();
-                    // В реальном проекте тут нужна проверка по БД, но для простоты оставим так
-                    isUnique = true; 
-                }
-
-                db.run(`INSERT INTO users (username, display_name, six_digit_id, password) VALUES (?, ?, ?, ?)`, 
-                [cleanUsername, cleanUsername, newId, hash], function(err) {
-                    if (err) ws.send(JSON.stringify({ type: 'auth_error', message: 'Этот юзернейм уже занят!' }));
-                    else {
-                        ws.send(JSON.stringify({ type: 'auth_success' }));
-                        broadcastOnlineUsers(); 
+                // Сначала проверяем уникальность логина
+                db.get(`SELECT username FROM users WHERE username = ?`, [cleanUsername], (err, row) => {
+                    if (row) {
+                        return ws.send(JSON.stringify({ type: 'auth_error', message: 'Этот юзернейм уже занят! Придумайте другой.' }));
                     }
+
+                    // Если логин свободен, генерируем уникальный 6-значный ID
+                    generateUniqueId((uniqueId) => {
+                        const hash = bcrypt.hashSync(data.password, 10);
+                        
+                        db.run(`INSERT INTO users (username, display_name, six_digit_id, password) VALUES (?, ?, ?, ?)`, 
+                        [cleanUsername, cleanUsername, uniqueId, hash], function(err) {
+                            if (err) {
+                                ws.send(JSON.stringify({ type: 'auth_error', message: 'Ошибка базы данных. Попробуйте еще раз.' }));
+                            } else {
+                                ws.send(JSON.stringify({ type: 'auth_success' }));
+                                broadcastOnlineUsers(); 
+                            }
+                        });
+                    });
                 });
             }
 
+            // 2. ВХОД
             if (data.type === 'login') {
                 const cleanUsername = data.username.trim();
                 db.get(`SELECT * FROM users WHERE username = ?`, [cleanUsername], (err, row) => {
                     if (err || !row) ws.send(JSON.stringify({ type: 'auth_error', message: 'Пользователь не найден!' }));
                     else if (bcrypt.compareSync(data.password, row.password)) {
+                        
+                        // Выкидываем старую сессию, если кто-то зашел с другого устройства
+                        if (clients.has(cleanUsername)) {
+                            const oldWs = clients.get(cleanUsername);
+                            if (oldWs && oldWs.readyState === WebSocket.OPEN) {
+                                oldWs.send(JSON.stringify({ type: 'force_logout', message: 'Вы вошли с другого устройства.' }));
+                                oldWs.close();
+                            }
+                        }
+
                         clients.set(cleanUsername, ws);
                         ws.username = cleanUsername;
                         ws.send(JSON.stringify({ 
@@ -79,20 +110,24 @@ wss.on('connection', function connection(ws) {
                             avatar: row.avatar, coins: row.coins, display_name: row.display_name, six_digit_id: row.six_digit_id
                         }));
                         broadcastOnlineUsers();
-                    } else ws.send(JSON.stringify({ type: 'auth_error', message: 'Неверный пароль!' }));
+                    } else {
+                        ws.send(JSON.stringify({ type: 'auth_error', message: 'Неверный пароль!' }));
+                    }
                 });
             }
 
+            // 3. ОБНОВЛЕНИЕ ПРОФИЛЯ (Смена ID)
             if (data.type === 'update_profile') {
-                // Проверяем, не занят ли новый 6-значный ID
+                // Проверяем, не занят ли новый ID другим пользователем
                 db.get(`SELECT username FROM users WHERE six_digit_id = ? AND username != ?`, [data.six_digit_id, ws.username], (err, row) => {
                     if (row) {
-                        ws.send(JSON.stringify({ type: 'error', message: 'Этот 6-значный ID уже занят!' }));
+                        // Если ID занят кем-то другим, выдаем ошибку
+                        ws.send(JSON.stringify({ type: 'error', message: 'Этот 6-значный ID уже занят другим пользователем!' }));
                     } else {
+                        // Если свободен, обновляем профиль
                         db.run(`UPDATE users SET status = ?, bio = ?, avatar = ?, display_name = ?, six_digit_id = ? WHERE username = ?`, 
                         [data.status, data.bio, data.avatar, data.display_name, data.six_digit_id, ws.username], () => {
                             broadcastOnlineUsers();
-                            // Отправляем обновленные данные клиенту
                             db.get(`SELECT display_name, six_digit_id FROM users WHERE username = ?`, [ws.username], (e, r) => {
                                 ws.send(JSON.stringify({ type: 'profile_updated', display_name: r.display_name, six_digit_id: r.six_digit_id }));
                             });
@@ -101,6 +136,7 @@ wss.on('connection', function connection(ws) {
                 });
             }
 
+            // ПРОМОКОДЫ
             if (data.type === 'create_promo') {
                 const code = data.code.toUpperCase();
                 db.run(`INSERT INTO promocodes (code, reward, max_uses) VALUES (?, ?, ?)`, [code, data.reward, data.max_uses], function(err) {
@@ -125,6 +161,7 @@ wss.on('connection', function connection(ws) {
                 });
             }
 
+            // ПОДАРКИ
             if (data.type === 'private' && data.isGift) {
                 const giftPrice = data.giftPrice;
                 db.get(`SELECT coins FROM users WHERE username = ?`, [ws.username], (err, row) => {
@@ -149,6 +186,7 @@ wss.on('connection', function connection(ws) {
                 return;
             }
 
+            // ОБЫЧНЫЕ СООБЩЕНИЯ
             if (data.type === 'private' && !data.isGift) {
                 const time = new Date().toLocaleTimeString();
                 db.run(`INSERT INTO messages (sender, receiver, text, isGift, timestamp) VALUES (?, ?, ?, 0, ?)`, [data.from, data.to, data.text, time]);
