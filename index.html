@@ -172,7 +172,17 @@
                 <span>Ваш баланс</span>
                 <span id="settings-balance">0</span>
             </div>
-            
+
+            <!-- НОВЫЙ БЛОК ВВОДА ПРОМОКОДА -->
+            <div style="margin-bottom: 20px; background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; border: 1px dashed var(--accent);">
+                <label style="font-size:12px; color:var(--accent); font-weight:bold; margin-bottom:5px; display:block;">Ввести промокод</label>
+                <div style="display:flex; gap:8px;">
+                    <input type="text" id="redeem-code-input" placeholder="RIVO100" style="margin-bottom:0; text-transform:uppercase; flex:1;">
+                    <button onclick="redeemPromo()" style="width:auto; margin-bottom:0; padding:0 15px; background:var(--gold); color:black; font-weight:bold;">OK</button>
+                </div>
+                <div id="redeem-msg" style="font-size:12px; margin-top:5px; text-align:center; font-weight:bold;"></div>
+            </div>
+
             <div style="text-align:center; margin-bottom:15px;">
                 <div class="profile-avatar-big" id="settings-avatar-preview"></div>
                 <label for="avatar-upload" style="background:var(--bg-input); padding:8px 15px; border-radius:20px; cursor:pointer; font-size:13px;">Сменить фото</label>
@@ -190,15 +200,13 @@
             
             <div id="admin-panel" class="hidden" style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 15px;">
                 <h3 style="text-align:center; font-size:16px; color: var(--gold);">Панель создателя</h3>
-                
                 <button class="admin-btn" onclick="adminGiveSelfCoins()">Начислить себе 10 000 R</button>
-                
                 <div style="margin-top:15px;">
                     <input type="text" id="promo-code-input" placeholder="Название промокода (напр. RIVO100)">
                     <input type="number" id="promo-reward-input" placeholder="Награда (коины)" value="50">
                     <button onclick="createPromo()" style="background: var(--gold); color: black;">Создать промокод</button>
                 </div>
-                <div id="promo-admin-msg" style="text-align:center; font-size:12px; margin-top:10px;"></div>
+                <div id="promo-admin-msg" style="text-align:center; font-size:12px; margin-top:10px; font-weight:bold;"></div>
             </div>
         </div>
     </div>
@@ -239,7 +247,6 @@
                 <div class="menu-btn" onclick="openCreateGroup()">➕</div>
             </div>
             
-            <!-- УЛУЧШЕННЫЙ ПОИСК -->
             <div class="search-container">
                 <input type="text" id="search-input" placeholder="Поиск (имя, @юзер или ID)..." oninput="onSearchInput()">
                 <span id="clear-search" onclick="clearSearch()">×</span>
@@ -343,7 +350,6 @@
         function logout() { localStorage.removeItem('rivo_user'); localStorage.removeItem('rivo_pass'); location.reload(); }
         function toggleAuthMode() { isLoginMode = !isLoginMode; document.getElementById('main-auth-btn').innerText = isLoginMode ? 'Войти' : 'Создать аккаунт'; document.getElementById('switch-text').innerText = isLoginMode ? 'Нет аккаунта? Зарегистрироваться' : 'Уже есть аккаунт? Войти'; document.getElementById('auth-error').innerText = ''; }
 
-        // ФИКС ПОИСКА: Показываем крестик и вызываем рендер
         function onSearchInput() {
             const val = document.getElementById('search-input').value;
             document.getElementById('clear-search').style.display = val.length > 0 ? 'block' : 'none';
@@ -528,6 +534,34 @@
                     ws.send(JSON.stringify({ type: 'get_groups' }));
                     document.getElementById('group-overlay').classList.add('hidden');
                 }
+                
+                // ОБРАБОТКА ПРОМОКОДОВ
+                if (data.type === 'promo_result') {
+                    if (data.newBalance !== undefined) {
+                        myUser.coins = data.newBalance;
+                        updateBalanceUI();
+                    }
+                    
+                    // Показываем сообщение в настройках (если мы там)
+                    const redeemMsg = document.getElementById('redeem-msg');
+                    if(redeemMsg) {
+                        redeemMsg.innerText = data.message;
+                        redeemMsg.style.color = data.success ? 'var(--online)' : 'var(--danger)';
+                        if(data.success) {
+                            document.getElementById('redeem-code-input').value = '';
+                            setTimeout(() => redeemMsg.innerText = '', 3000);
+                        }
+                    }
+                    
+                    // Показываем сообщение в админке (если создаем промокод)
+                    const adminMsg = document.getElementById('promo-admin-msg');
+                    if(adminMsg) {
+                        adminMsg.innerText = data.message;
+                        adminMsg.style.color = data.success ? 'var(--online)' : 'var(--danger)';
+                        if(data.success) setTimeout(() => adminMsg.innerText = '', 3000);
+                    }
+                }
+
                 if (data.type === 'admin_success') {
                     alert(data.message);
                 }
@@ -590,7 +624,6 @@
                     const uId = u.six_digit_id ? u.six_digit_id.toString() : '';
                     const uDisplay = u.display_name ? u.display_name.toLowerCase() : '';
                     
-                    // Ищем по всем параметрам
                     return uName.includes(query) || uId.includes(query) || uDisplay.includes(query);
                 }).forEach(u => {
                     found++;
@@ -675,7 +708,6 @@
             if(scroll) document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
         }
 
-        // ИСПРАВЛЕНО: Проверка на undefined
         function addGiftToScreen(emoji, senderName, comment) {
             const div = document.createElement('div');
             div.className = 'gift-event';
@@ -709,6 +741,7 @@
             document.getElementById('settings-avatar-preview').innerHTML = myUser.avatar ? `<img src="${myUser.avatar}">` : '👤';
             selectedAvatarBase64 = myUser.avatar;
             updateBalanceUI(); 
+            document.getElementById('redeem-msg').innerText = ''; // Очищаем старое сообщение
             document.getElementById('settings-overlay').classList.remove('hidden');
         }
 
@@ -752,7 +785,6 @@
             const comment = prompt("Пожелание к подарку:", "Спасибо!");
             if(comment === null) return;
             
-            // Отправляем пустую строку, если ничего не ввели, чтобы не было undefined
             const finalComment = comment.trim() === '' ? '' : comment;
             
             ws.send(JSON.stringify({ type: 'private', from: myUser.username, to: currentChatId, text: emoji, isGift: true, giftPrice: price, comment: finalComment }));
@@ -788,6 +820,13 @@
             const amount = prompt(`Сколько R-коинов начислить пользователю ${viewingUser}?`, "100");
             if(!amount || isNaN(amount)) return;
             ws.send(JSON.stringify({ type: 'admin_give_coins', target: viewingUser, amount: parseInt(amount) }));
+        }
+
+        // ВВОД ПРОМОКОДА
+        function redeemPromo() {
+            const code = document.getElementById('redeem-code-input').value.trim();
+            if(!code) return;
+            ws.send(JSON.stringify({ type: 'redeem_promo', code: code }));
         }
 
         function createPromo() {
