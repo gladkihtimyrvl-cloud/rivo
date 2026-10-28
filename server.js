@@ -14,15 +14,37 @@ const db = new sqlite3.Database('./database.db');
 
 db.serialize(() => {
     db.run(`CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE, display_name TEXT,
-        six_digit_id TEXT UNIQUE, password TEXT, status TEXT DEFAULT 'online', 
-        bio TEXT DEFAULT 'Привет, я использую Rivo!', avatar TEXT DEFAULT '', coins INTEGER DEFAULT 100
+        id INTEGER PRIMARY KEY AUTOINCREMENT, 
+        username TEXT UNIQUE, 
+        display_name TEXT,
+        six_digit_id TEXT UNIQUE, 
+        password TEXT, 
+        status TEXT DEFAULT 'online', 
+        bio TEXT DEFAULT 'Привет, я использую Rivo!', 
+        avatar TEXT DEFAULT '', 
+        coins INTEGER DEFAULT 100
     )`);
-    db.run(`CREATE TABLE IF NOT EXISTS groups (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, creator TEXT)`);
-    db.run(`CREATE TABLE IF NOT EXISTS group_members (group_id INTEGER, username TEXT, PRIMARY KEY (group_id, username))`);
+    
+    db.run(`CREATE TABLE IF NOT EXISTS groups (
+        id INTEGER PRIMARY KEY AUTOINCREMENT, 
+        name TEXT, 
+        creator TEXT
+    )`);
+    
+    db.run(`CREATE TABLE IF NOT EXISTS group_members (
+        group_id INTEGER, 
+        username TEXT, 
+        PRIMARY KEY (group_id, username)
+    )`);
+    
     db.run(`CREATE TABLE IF NOT EXISTS messages (
-        id INTEGER PRIMARY KEY AUTOINCREMENT, sender TEXT, receiver TEXT, 
-        text TEXT, isGift INTEGER, comment TEXT, timestamp TEXT
+        id INTEGER PRIMARY KEY AUTOINCREMENT, 
+        sender TEXT, 
+        receiver TEXT, 
+        text TEXT, 
+        isGift INTEGER, 
+        comment TEXT, 
+        timestamp TEXT
     )`);
     
     db.run(`CREATE TABLE IF NOT EXISTS nfts (
@@ -37,9 +59,24 @@ db.serialize(() => {
         price INTEGER DEFAULT 0
     )`);
 
-    db.run(`CREATE TABLE IF NOT EXISTS promocodes (code TEXT UNIQUE, reward INTEGER, max_uses INTEGER, current_uses INTEGER DEFAULT 0)`);
-    db.run(`CREATE TABLE IF NOT EXISTS blocks (blocker TEXT, blocked TEXT, PRIMARY KEY (blocker, blocked))`);
-    db.run(`CREATE TABLE IF NOT EXISTS promo_history (username TEXT, code TEXT, PRIMARY KEY (username, code))`);
+    db.run(`CREATE TABLE IF NOT EXISTS promocodes (
+        code TEXT UNIQUE, 
+        reward INTEGER, 
+        max_uses INTEGER, 
+        current_uses INTEGER DEFAULT 0
+    )`);
+    
+    db.run(`CREATE TABLE IF NOT EXISTS blocks (
+        blocker TEXT, 
+        blocked TEXT, 
+        PRIMARY KEY (blocker, blocked)
+    )`);
+    
+    db.run(`CREATE TABLE IF NOT EXISTS promo_history (
+        username TEXT, 
+        code TEXT, 
+        PRIMARY KEY (username, code)
+    )`);
 });
 
 const clients = new Map(); 
@@ -57,8 +94,9 @@ wss.on('connection', function connection(ws) {
                     const hash = bcrypt.hashSync(data.password, 10);
                     db.run(`INSERT INTO users (username, display_name, six_digit_id, password) VALUES (?, ?, ?, ?)`, 
                     [cleanUsername, cleanUsername, uniqueId, hash], function(err) {
-                        if (err) ws.send(JSON.stringify({ type: 'auth_error', message: 'Ошибка сервера.' }));
-                        else {
+                        if (err) {
+                            ws.send(JSON.stringify({ type: 'auth_error', message: 'Ошибка сервера.' }));
+                        } else {
                             ws.send(JSON.stringify({ type: 'auth_success' }));
                             broadcastAllUsers();
                         }
@@ -69,8 +107,9 @@ wss.on('connection', function connection(ws) {
             if (data.type === 'login') {
                 const cleanUsername = data.username.trim();
                 db.get(`SELECT * FROM users WHERE username = ?`, [cleanUsername], (err, row) => {
-                    if (err || !row) ws.send(JSON.stringify({ type: 'auth_error', message: 'Пользователь не найден!' }));
-                    else if (bcrypt.compareSync(data.password, row.password)) {
+                    if (err || !row) {
+                        ws.send(JSON.stringify({ type: 'auth_error', message: 'Пользователь не найден!' }));
+                    } else if (bcrypt.compareSync(data.password, row.password)) {
                         if (clients.has(cleanUsername)) {
                             const oldWs = clients.get(cleanUsername);
                             if (oldWs && oldWs.readyState === WebSocket.OPEN) {
@@ -82,7 +121,9 @@ wss.on('connection', function connection(ws) {
                         ws.username = cleanUsername;
                         ws.send(JSON.stringify({ type: 'auth_success', user: row }));
                         broadcastAllUsers(); 
-                    } else ws.send(JSON.stringify({ type: 'auth_error', message: 'Неверный пароль!' }));
+                    } else {
+                        ws.send(JSON.stringify({ type: 'auth_error', message: 'Неверный пароль!' }));
+                    }
                 });
             }
 
@@ -131,7 +172,7 @@ wss.on('connection', function connection(ws) {
 
             if (data.type === 'get_nfts') {
                 db.all(`SELECT * FROM nfts WHERE owner = ?`, [data.target], (err, rows) => {
-                    ws.send(JSON.stringify({ type: 'user_nfts', nfts: rows }));
+                    ws.send(JSON.stringify({ type: 'user_nfts', nfts: rows || [] }));
                 });
             }
 
@@ -165,7 +206,7 @@ wss.on('connection', function connection(ws) {
 
             if (data.type === 'get_marketplace') {
                 db.all(`SELECT * FROM nfts WHERE is_listed = 1`, [], (err, rows) => {
-                    ws.send(JSON.stringify({ type: 'marketplace_data', items: rows }));
+                    ws.send(JSON.stringify({ type: 'marketplace_data', items: rows || [] }));
                 });
             }
 
@@ -220,6 +261,22 @@ wss.on('connection', function connection(ws) {
                 }
             }
             
+            if (data.type === 'get_profile') {
+                db.get(`SELECT username, display_name, six_digit_id, status, bio, avatar, coins FROM users WHERE username = ?`, [data.target], (err, user) => {
+                    if (err || !user) return ws.send(JSON.stringify({ type: 'error', message: 'Пользователь не найден' }));
+                    
+                    db.get(`SELECT * FROM blocks WHERE blocker = ? AND blocked = ?`, [ws.username, data.target], (e, iBlocked) => {
+                        // ИСПРАВЛЕНИЕ: Убрали запрос к несуществующей таблице received_gifts
+                        ws.send(JSON.stringify({ 
+                            type: 'profile_data', 
+                            user: user, 
+                            gifts: [], 
+                            iBlocked: !!iBlocked 
+                        }));
+                    });
+                });
+            }
+
             if (data.type === 'private' && data.isGift) {
                 db.get(`SELECT coins FROM users WHERE username = ?`, [ws.username], (err, row) => {
                     if (row.coins < data.giftPrice) return ws.send(JSON.stringify({ type: 'error', message: 'Недостаточно R-коинов!' }));
@@ -229,6 +286,54 @@ wss.on('connection', function connection(ws) {
                         const recipientSocket = clients.get(data.to);
                         if (recipientSocket) recipientSocket.send(JSON.stringify({ type: 'private', from: data.from, text: data.text, isGift: true, comment: data.comment, time: time }));
                         ws.send(JSON.stringify({ type: 'update_coins', coins: row.coins - data.giftPrice }));
+                    });
+                });
+            }
+
+            if (data.type === 'block_user') {
+                db.run(`INSERT OR IGNORE INTO blocks (blocker, blocked) VALUES (?, ?)`, [ws.username, data.target], () => {
+                    ws.send(JSON.stringify({ type: 'action_success', action: 'block', target: data.target }));
+                });
+            }
+            if (data.type === 'unblock_user') {
+                db.run(`DELETE FROM blocks WHERE blocker = ? AND blocked = ?`, [ws.username, data.target], () => {
+                    ws.send(JSON.stringify({ type: 'action_success', action: 'unblock', target: data.target }));
+                });
+            }
+
+            if (data.type === 'delete_chat') {
+                db.run(`DELETE FROM messages WHERE (sender = ? AND receiver = ?) OR (sender = ? AND receiver = ?)`, 
+                [ws.username, data.target, data.target, ws.username], () => {
+                    ws.send(JSON.stringify({ type: 'chat_deleted', target: data.target }));
+                });
+            }
+
+            if (data.type === 'create_promo') {
+                if (ws.username !== 'revezzz') return ws.send(JSON.stringify({ type: 'promo_result', success: false, message: 'У вас нет прав!' }));
+                const code = data.code.toUpperCase();
+                db.run(`INSERT INTO promocodes (code, reward, max_uses) VALUES (?, ?, ?)`, [code, data.reward, data.max_uses], function(err) {
+                    if (err) ws.send(JSON.stringify({ type: 'promo_result', success: false, message: 'Промокод уже существует!' }));
+                    else ws.send(JSON.stringify({ type: 'promo_result', success: true, message: `Промокод ${code} создан!` }));
+                });
+            }
+
+            if (data.type === 'redeem_promo') {
+                const code = data.code.toUpperCase();
+                db.get(`SELECT * FROM promocodes WHERE code = ?`, [code], (err, row) => {
+                    if (err || !row) return ws.send(JSON.stringify({ type: 'promo_result', success: false, message: 'Промокод не найден!' }));
+                    if (row.current_uses >= row.max_uses) return ws.send(JSON.stringify({ type: 'promo_result', success: false, message: 'Лимит исчерпан!' }));
+                    
+                    db.get(`SELECT * FROM promo_history WHERE username = ? AND code = ?`, [ws.username, code], (err, used) => {
+                        if (used) return ws.send(JSON.stringify({ type: 'promo_result', success: false, message: 'Вы уже активировали этот промокод!' }));
+
+                        db.run(`INSERT INTO promo_history (username, code) VALUES (?, ?)`, [ws.username, code]);
+                        db.run(`UPDATE promocodes SET current_uses = current_uses + 1 WHERE code = ?`, [code]);
+                        db.run(`UPDATE users SET coins = coins + ? WHERE username = ?`, [row.reward, ws.username], () => {
+                            db.get(`SELECT coins FROM users WHERE username = ?`, [ws.username], (e, r) => {
+                                ws.send(JSON.stringify({ type: 'promo_result', success: true, message: `+${row.reward} R-коинов!`, newBalance: r.coins }));
+                                broadcastAllUsers();
+                            });
+                        });
                     });
                 });
             }
