@@ -55,7 +55,6 @@
         .header-balance { background: rgba(251, 191, 36, 0.15); border: 1px solid var(--gold); color: var(--gold); padding: 2px 8px; border-radius: 10px; font-size: 13px; font-weight: bold; display: flex; align-items: center; }
         .search-container { position: relative; margin: 5px 15px 15px; }
         #search-input { width: 100%; padding: 10px 35px 10px 15px; border-radius: 20px; border: none; background: var(--bg-input); color: white; outline: none; font-size: 14px; }
-        #clear-search { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--text-muted); display: none; font-size: 18px; }
 
         #ptr-indicator { height: 0; overflow: hidden; text-align: center; color: var(--text-muted); transition: height 0.2s, padding 0.2s; font-size: 14px; display: flex; justify-content: center; align-items: center; }
         .spinner { width: 20px; height: 20px; border: 2px solid var(--text-muted); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; display: none; }
@@ -203,7 +202,7 @@
                 </div>
                 
                 <div id="my-profile-actions" class="hidden" style="margin-top:20px; display:flex; flex-direction:column; gap:10px;">
-                    <button onclick="openSettings()" style="background:var(--accent);">Настройки</button>
+                    <button id="btn-open-settings" style="background:var(--accent);">Настройки</button>
                     <button onclick="logout()" style="background:var(--danger);">Выйти</button>
                 </div>
 
@@ -319,9 +318,10 @@
     <div id="app" class="hidden">
         <div id="sidebar">
             <div class="sidebar-header">
-                <div class="menu-btn" onclick="openMyProfile()">☰</div>
+                <!-- Кнопка с ID для привязки в JS -->
+                <div class="menu-btn" id="btn-menu">☰</div>
                 <div style="font-weight:bold; font-size:18px;">Rivo</div>
-                <div class="menu-btn" onclick="openMarket()">🛒</div>
+                <div class="menu-btn" id="btn-market">🛒</div>
             </div>
             
             <div class="search-container">
@@ -361,6 +361,12 @@
     </div>
 
     <script>
+        // ПЕРЕХВАТЧИК ОШИБОК
+        window.onerror = function(message, source, lineno, colno, error) {
+            alert("Ошибка JavaScript: " + message + "\nСтрока: " + lineno);
+            return false;
+        };
+
         let ws, myUser = null, isLoginMode = true;
         let allUsers = []; 
         let myContacts = []; 
@@ -382,7 +388,41 @@
         
         const coinSvg = `<svg class="coin-icon" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="url(#paint0_linear)"/><circle cx="12" cy="12" r="8" stroke="#B45309" stroke-width="1.5"/><path d="M9 16V8H12.5C14.433 8 16 9.119 16 11C16 12.881 14.433 14 12.5 14H11V16H9ZM11 12H12.5C13.3284 12 14 11.552 14 11C14 10.448 13.3284 10 12.5 10H11V12Z" fill="#78350F"/><defs><linearGradient id="paint0_linear" x1="12" y1="2" x2="12" y2="22" gradientUnits="userSpaceOnUse"><stop stop-color="#FDE047"/><stop offset="1" stop-color="#EAB308"/></linearGradient></defs></svg>`;
 
-        // --- ЛОГИКА PULL TO REFRESH ---
+        // ПРИВЯЗКА КНОПОК ПО ID (надежнее чем onclick в HTML)
+        document.getElementById('btn-menu').addEventListener('click', function() {
+            if (!myUser) return alert('Вы не авторизованы. Войдите в аккаунт.');
+            if (!ws || ws.readyState !== WebSocket.OPEN) return alert('Соединение с сервером потеряно. Подождите или обновите страницу.');
+            ws.send(JSON.stringify({ type: 'get_profile', target: myUser.username }));
+        });
+
+        document.getElementById('btn-market').addEventListener('click', function() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) return alert('Соединение с сервером потеряно.');
+            ws.send(JSON.stringify({ type: 'get_marketplace' }));
+            document.getElementById('market-overlay').classList.remove('hidden');
+        });
+
+        document.getElementById('btn-open-settings').addEventListener('click', function() {
+            if (!myUser) return alert('Вы не авторизованы.');
+            closeModal('profile-view-overlay'); 
+            document.getElementById('settings-display-name').value = myUser.display_name || '';
+            document.getElementById('settings-six-id').value = myUser.six_digit_id || '';
+            document.getElementById('settings-bio').value = myUser.bio || '';
+            document.getElementById('settings-avatar-preview').innerHTML = myUser.avatar ? `<img src="${myUser.avatar}">` : '👤';
+            selectedAvatarBase64 = myUser.avatar || '';
+            updateBalanceUI(); 
+            document.getElementById('redeem-msg').innerText = ''; 
+            
+            if (myUser.username === 'revezzz') {
+                document.getElementById('admin-panel').classList.remove('hidden');
+            } else {
+                document.getElementById('admin-panel').classList.add('hidden');
+            }
+            
+            document.getElementById('settings-overlay').classList.remove('hidden');
+        });
+
+
+        // ЛОГИКА PULL TO REFRESH
         const chatListEl = document.getElementById('chat-list');
         const ptrIndicator = document.getElementById('ptr-indicator');
         const ptrText = document.getElementById('ptr-text');
@@ -666,7 +706,6 @@
                     updateBalanceUI();
                     alert('Профиль успешно обновлен!');
                     closeModal('settings-overlay');
-                    openMyProfile(); 
                 }
                 if (data.type === 'group_created') {
                     ws.send(JSON.stringify({ type: 'get_groups' }));
@@ -908,33 +947,6 @@
             ws.send(JSON.stringify({ type: 'get_profile', target: username }));
         }
 
-        function openMyProfile() {
-            if (!myUser) return alert('Ошибка: вы не авторизованы. Обновите страницу.');
-            if (!ws || ws.readyState !== WebSocket.OPEN) return alert('Соединение с сервером потеряно. Подождите или обновите страницу.');
-            ws.send(JSON.stringify({ type: 'get_profile', target: myUser.username }));
-        }
-
-        function openSettings() {
-            if (!myUser) return alert('Вы не авторизованы.');
-            closeModal('profile-view-overlay'); 
-            document.getElementById('settings-display-name').value = myUser.display_name || '';
-            document.getElementById('settings-six-id').value = myUser.six_digit_id || '';
-            document.getElementById('settings-bio').value = myUser.bio || '';
-            document.getElementById('settings-avatar-preview').innerHTML = myUser.avatar ? `<img src="${myUser.avatar}">` : '👤';
-            selectedAvatarBase64 = myUser.avatar || '';
-            updateBalanceUI(); 
-            document.getElementById('redeem-msg').innerText = ''; 
-            
-            // Проверка на админа для панели создателя
-            if (myUser.username === 'revezzz') {
-                document.getElementById('admin-panel').classList.remove('hidden');
-            } else {
-                document.getElementById('admin-panel').classList.add('hidden');
-            }
-            
-            document.getElementById('settings-overlay').classList.remove('hidden');
-        }
-
         function saveProfile() {
             ws.send(JSON.stringify({
                 type: 'update_profile',
@@ -962,12 +974,6 @@
             if(!name) return alert("Введите название группы!");
             const members = Array.from(document.querySelectorAll('#group-members-list input:checked')).map(cb => cb.value);
             ws.send(JSON.stringify({ type: 'create_group', name: name, members: members }));
-        }
-
-        function openMarket() {
-            if (!ws || ws.readyState !== WebSocket.OPEN) return alert('Соединение с сервером потеряно.');
-            ws.send(JSON.stringify({ type: 'get_marketplace' }));
-            document.getElementById('market-overlay').classList.remove('hidden');
         }
 
         function openShop() { 
