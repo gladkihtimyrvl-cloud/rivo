@@ -25,7 +25,6 @@
 
         .coin-icon { vertical-align: middle; width: 16px; height: 16px; margin-right: 4px; margin-top: -2px; }
 
-        /* --- АНИМАЦИИ --- */
         @keyframes modalFadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes modalFadeOut { from { opacity: 1; } to { opacity: 0; } }
         @keyframes modalSlideUp { from { transform: translateY(40px) scale(0.95); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
@@ -33,13 +32,6 @@
         @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes slideOutRight { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
         
-        @keyframes spinRoulette { from { transform: translateX(0); } to { transform: translateX(-3000px); } }
-        @keyframes giftFloat {
-            0% { transform: translateY(0) rotate(0deg); }
-            50% { transform: translateY(-15px) rotate(3deg); }
-            100% { transform: translateY(0) rotate(0deg); }
-        }
-
         /* ЛЕВАЯ ПАНЕЛЬ */
         #sidebar { width: 340px; background: var(--bg-panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 2; }
         .sidebar-header { padding: 10px 15px; display: flex; align-items: center; justify-content: space-between; background: var(--bg-panel); }
@@ -96,7 +88,7 @@
         .modal-box button { width: 100%; padding: 12px; border-radius: 8px; border: none; background: var(--accent); color: white; font-weight: 600; cursor: pointer; margin-bottom: 10px; }
         .hidden { display: none !important; }
 
-        /* ПРОФИЛЬ (КАК В SLASHER) */
+        /* ПРОФИЛЬ */
         .profile-header { background: linear-gradient(135deg, #1e293b, #0f172a); border-radius: 16px; padding: 20px; text-align: center; position: relative; overflow: hidden; margin-bottom: 15px; border: 1px solid var(--border); }
         .profile-header::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100px; background: linear-gradient(90deg, #5eb5f7, #7c3aed, #db2777); opacity: 0.3; z-index: 0; }
         .profile-avatar-big { width: 90px; height: 90px; border-radius: 50%; background: #202b36; margin: 0 auto 10px; display: flex; justify-content: center; align-items: center; font-size: 40px; overflow: hidden; position: relative; z-index: 1; border: 3px solid var(--bg-panel); box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
@@ -144,7 +136,7 @@
             <h2>Rivo</h2>
             <input type="text" id="auth-username" placeholder="Юзернейм">
             <input type="password" id="auth-password" placeholder="Пароль">
-            <button onclick="submitAuth()">Войти</button>
+            <button id="main-auth-btn" onclick="submitAuth()">Войти</button>
             <div style="text-align:center; color:var(--accent); cursor:pointer;" id="switch-text" onclick="toggleAuthMode()">Нет аккаунта? Зарегистрироваться</div>
             <div id="auth-error" style="color: #ef4444; margin-top: 10px; text-align: center; font-size: 14px;"></div>
         </div>
@@ -210,9 +202,7 @@
             <p style="text-align:center; color:var(--text-muted); font-size:14px;">Стоимость: <b style="color:var(--gold);">1000 R</b></p>
             
             <div class="roulette-container">
-                <div class="roulette-strip" id="roulette-strip">
-                    <!-- Генерируется JS -->
-                </div>
+                <div class="roulette-strip" id="roulette-strip"></div>
                 <div class="roulette-line"></div>
             </div>
 
@@ -223,6 +213,57 @@
 
             <button id="spin-btn" onclick="startRoulette()">Крутить!</button>
             <button onclick="closeModal('roulette-overlay')" style="background:transparent; border:1px solid var(--border);">Закрыть</button>
+        </div>
+    </div>
+
+    <!-- НАСТРОЙКИ -->
+    <div id="settings-overlay" class="modal-overlay hidden">
+        <div class="modal-box">
+            <h2>Настройки</h2>
+            <div class="profile-balance">
+                <span>Ваш баланс</span>
+                <span id="settings-balance">0</span>
+            </div>
+
+            <div style="margin-bottom: 20px; background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; border: 1px dashed var(--accent);">
+                <label style="font-size:12px; color:var(--accent); font-weight:bold; margin-bottom:5px; display:block;">Ввести промокод</label>
+                <div style="display:flex; gap:8px;">
+                    <input type="text" id="redeem-code-input" placeholder="RIVO100" style="margin-bottom:0; text-transform:uppercase; flex:1;">
+                    <button onclick="redeemPromo()" style="width:auto; margin-bottom:0; padding:0 15px; background:var(--gold); color:black; font-weight:bold;">OK</button>
+                </div>
+                <div id="redeem-msg" style="font-size:12px; margin-top:5px; text-align:center; font-weight:bold;"></div>
+            </div>
+
+            <div style="text-align:center; margin-bottom:15px;">
+                <div class="profile-avatar-big" id="settings-avatar-preview"></div>
+                <label for="avatar-upload" style="background:var(--bg-input); padding:8px 15px; border-radius:20px; cursor:pointer; font-size:13px;">Сменить фото</label>
+                <input type="file" id="avatar-upload" accept="image/*" style="display:none;" onchange="handleAvatarUpload(event)">
+            </div>
+            <label style="font-size:12px; color:var(--text-muted);">Отображаемое имя</label>
+            <input type="text" id="settings-display-name">
+            <label style="font-size:12px; color:var(--text-muted);">6-значный ID</label>
+            <input type="text" id="settings-six-id" maxlength="6">
+            <label style="font-size:12px; color:var(--text-muted);">О себе</label>
+            <input type="text" id="settings-bio">
+            <button onclick="saveProfile()">Сохранить</button>
+            
+            <div id="admin-panel" class="hidden" style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 15px;">
+                <h3 style="text-align:center; font-size:16px; color: var(--gold);">Панель создателя</h3>
+                <div style="text-align:center; margin-bottom:10px; font-size:14px; color:var(--text-muted);">Всего в Rivo: <b id="total-users-count" style="color:white;">0</b> чел.</div>
+                
+                <button class="admin-btn" onclick="adminGiveSelfCoins()">Начислить себе 10 000 R</button>
+                
+                <div style="margin-top:15px;">
+                    <input type="text" id="promo-code-input" placeholder="Название промокода (напр. RIVO100)">
+                    <input type="number" id="promo-reward-input" placeholder="Награда (коины)" value="50">
+                    <input type="number" id="promo-limit-input" placeholder="Лимит (сколько людей)" value="10">
+                    <button onclick="createPromo()" style="background: var(--gold); color: black;">Создать промокод</button>
+                </div>
+                <div id="promo-admin-msg" style="text-align:center; font-size:12px; margin-top:10px; font-weight:bold;"></div>
+            </div>
+
+            <button onclick="logout()" style="background:var(--danger); margin-top: 20px;">Выйти из аккаунта</button>
+            <button onclick="closeModal('settings-overlay')" style="background:transparent; border:1px solid var(--border);">Отмена</button>
         </div>
     </div>
 
@@ -279,13 +320,14 @@
         let viewingUser = null;
         let currentUserBlocked = false;
 
-        // БАЗОВЫЕ SVG
         const GIFTS = {
             'gift_bear': `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="22" cy="22" r="18" fill="#5D4037"/><circle cx="78" cy="22" r="18" fill="#5D4037"/><circle cx="50" cy="55" r="42" fill="#8D6E63"/><circle cx="30" cy="45" r="8" fill="#212121"/><circle cx="70" cy="45" r="8" fill="#212121"/><ellipse cx="50" cy="65" rx="16" ry="11" fill="#EFEBE9"/><circle cx="50" cy="60" r="7" fill="#212121"/></svg>`,
             'gift_crown': `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M12 65 L5 15 L35 45 L50 5 L65 45 L95 15 L88 65 Z" fill="#FFC107"/><rect x="12" y="65" width="76" height="20" fill="#FF6F00"/></svg>`,
             'gift_rose': `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M50 15 C15 15, 5 50, 30 70 C40 80, 50 90, 50 100 C50 90, 60 80, 70 70 C95 50, 85 15, 50 15 Z" fill="#E91E63"/><path d="M50 85 L50 110" stroke="#1B5E20" stroke-width="8"/></svg>`,
             'gift_diamond': `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><polygon points="50,5 95,40 50,95 5,40" fill="#00BCD4"/></svg>`
         };
+        
+        const coinSvg = `<svg class="coin-icon" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="url(#paint0_linear)"/><circle cx="12" cy="12" r="8" stroke="#B45309" stroke-width="1.5"/><path d="M9 16V8H12.5C14.433 8 16 9.119 16 11C16 12.881 14.433 14 12.5 14H11V16H9ZM11 12H12.5C13.3284 12 14 11.552 14 11C14 10.448 13.3284 10 12.5 10H11V12Z" fill="#78350F"/><defs><linearGradient id="paint0_linear" x1="12" y1="2" x2="12" y2="22" gradientUnits="userSpaceOnUse"><stop stop-color="#FDE047"/><stop offset="1" stop-color="#EAB308"/></linearGradient></defs></svg>`;
 
         function closeModal(id) {
             const modal = document.getElementById(id);
@@ -299,67 +341,47 @@
 
         function updateBalanceUI() {
             if(!myUser) return;
-            document.getElementById('header-balance-val').innerText = myUser.coins;
-            document.getElementById('shop-balance').innerText = myUser.coins;
-            document.getElementById('settings-balance').innerHTML = `${coinSvg} ${myUser.coins}`;
+            const balEl = document.getElementById('header-balance-val');
+            if(balEl) balEl.innerText = myUser.coins;
+            const setBal = document.getElementById('settings-balance');
+            if(setBal) setBal.innerHTML = `${coinSvg} ${myUser.coins}`;
         }
 
-        function openMarket() {
-            ws.send(JSON.stringify({ type: 'get_marketplace' }));
-            document.getElementById('market-overlay').classList.remove('hidden');
-        }
-
-        function renderNftCard(nft, isMarket = false) {
-            const baseSvg = GIFTS[nft.base_type] || GIFTS['gift_bear'];
-            const rarityColors = { 'Common': '#7f91a4', 'Rare': '#5eb5f7', 'Epic': '#db2777', 'Legendary': '#fbbf24' };
-            const color = rarityColors[nft.rarity] || '#fff';
-            
-            let buyBtn = '';
-            if (isMarket) {
-                buyBtn = `<button onclick="buyNft('${nft.id}', ${nft.price})" style="width:100%; padding:5px; margin-top:5px; background:var(--gold); color:black; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">Купить</button>`;
-            } else {
-                buyBtn = `<button onclick="listNft('${nft.id}')" style="width:100%; padding:5px; margin-top:5px; background:var(--accent); color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">Продать</button>`;
+        function handleAvatarUpload(e) {
+            const file = e.target.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const MAX_SIZE = 100;
+                    let width = img.width; let height = img.height;
+                    if (width > height) { if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; } }
+                    else { if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; } }
+                    canvas.width = width; canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    selectedAvatarBase64 = canvas.toDataURL('image/jpeg');
+                    document.getElementById('settings-avatar-preview').innerHTML = `<img src="${selectedAvatarBase64}">`;
+                }
+                img.src = event.target.result;
             }
-
-            return `
-                <div class="nft-card" style="border-color: ${color};">
-                    <div class="nft-bg" style="background: ${nft.color}"></div>
-                    ${baseSvg}
-                    <div class="nft-info">
-                        <div class="nft-rarity" style="color: ${color};">${nft.rarity}</div>
-                        <div class="nft-num">#${nft.num}</div>
-                        ${isMarket ? `<div style="font-size:12px; color:var(--gold); margin-top:3px;">${nft.price} R</div>` : ''}
-                        ${buyBtn}
-                    </div>
-                </div>
-            `;
+            reader.readAsDataURL(file);
         }
 
-        // РУЛЕТКА
-        let currentUpgradeBase = null;
-        function openRoulette(baseType) {
-            currentUpgradeBase = baseType;
-            document.getElementById('roulette-overlay').classList.remove('hidden');
-            document.getElementById('roulette-result').classList.add('hidden');
-            document.getElementById('spin-btn').style.display = 'block';
-            
-            // Заполняем рулетку
-            const strip = document.getElementById('roulette-strip');
-            strip.style.transform = 'translateX(0)';
-            strip.innerHTML = '';
-            for(let i=0; i<50; i++) {
-                const rarities = ['Common', 'Rare', 'Epic', 'Legendary'];
-                const randomR = rarities[Math.floor(Math.random() * rarities.length)];
-                const svg = GIFTS[baseType].replace('<svg', `<svg style="filter: drop-shadow(0 0 5px ${randomR==='Legendary'?'#fbbf24':'transparent'});"`);
-                strip.innerHTML += `<div class="roulette-item">${svg}</div>`;
+        window.onload = function() {
+            const savedUser = localStorage.getItem('rivo_user');
+            const savedPass = localStorage.getItem('rivo_pass');
+            if (savedUser && savedPass) {
+                document.getElementById('auth-username').value = savedUser;
+                document.getElementById('auth-password').value = savedPass;
+                submitAuth();
             }
-        }
+        };
 
-        function startRoulette() {
-            document.getElementById('spin-btn').style.display = 'none';
-            // Отправляем на сервер запрос на улучшение
-            ws.send(JSON.stringify({ type: 'upgrade_to_nft', base_type: currentUpgradeBase, cost: 1000 }));
-        }
+        function logout() { localStorage.removeItem('rivo_user'); localStorage.removeItem('rivo_pass'); location.reload(); }
+        function toggleAuthMode() { isLoginMode = !isLoginMode; document.getElementById('main-auth-btn').innerText = isLoginMode ? 'Войти' : 'Создать аккаунт'; document.getElementById('switch-text').innerText = isLoginMode ? 'Нет аккаунта? Зарегистрироваться' : 'Уже есть аккаунт? Войти'; document.getElementById('auth-error').innerText = ''; }
 
         function submitAuth() {
             const user = document.getElementById('auth-username').value.trim();
@@ -396,10 +418,41 @@
                     ws.send(JSON.stringify({ type: 'get_chat_list' })); 
                 }
                 
-                if(data.type === 'user_list') { allUsers = data.users; renderChats(); }
+                if(data.type === 'user_list') { allUsers = data.users; document.getElementById('total-users-count').innerText = allUsers.length; renderChats(); }
                 if(data.type === 'chat_list') { myContacts = data.contacts; renderChats(); }
                 if(data.type === 'my_groups') { myGroups = data.groups; renderChats(); }
                 
+                if (data.type === 'history') {
+                    const messagesDiv = document.getElementById('messages');
+                    messagesDiv.innerHTML = '';
+                    data.messages.forEach(msg => {
+                        const isMe = msg.sender === myUser.username;
+                        if (msg.isGift) {
+                            addGiftToScreen(msg.text, isMe ? "Вы" : msg.sender, msg.comment);
+                        } else {
+                            let senderHtml = (!isMe && currentChatType === 'group') ? `<div class="sender-name">${msg.sender}</div>` : '';
+                            let msgHtml = `${senderHtml}${msg.text} <span class="msg-time">${msg.timestamp || ''}</span>`;
+                            addMsgToScreen(msgHtml, isMe ? 'my-msg' : 'their-msg', false);
+                        }
+                    });
+                    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                }
+                
+                if (data.type === 'private' || data.type === 'group_message') {
+                    const chatId = data.type === 'private' ? data.from : 'group_' + data.groupId;
+                    if (currentChatId === chatId) {
+                        if (data.isGift) addGiftToScreen(data.text, data.from, data.comment);
+                        else {
+                            let senderHtml = (data.type === 'group_message' && data.from !== myUser.username) ? `<div class="sender-name">${data.from}</div>` : '';
+                            addMsgToScreen(`${senderHtml}${data.text} <span class="msg-time">${data.time}</span>`, data.from === myUser.username ? 'my-msg' : 'their-msg', true);
+                        }
+                    } else {
+                        unreadMessages[chatId] = (unreadMessages[chatId] || 0) + 1;
+                        if (data.type === 'private' && !myContacts.includes(data.from)) myContacts.push(data.from); 
+                        renderChats();
+                    }
+                }
+
                 if (data.type === 'profile_data') {
                     const u = data.user;
                     viewingUser = u.username;
@@ -417,9 +470,23 @@
                     } else {
                         document.getElementById('other-profile-actions').style.display = 'flex';
                         document.getElementById('my-profile-actions').classList.add('hidden');
+                        
+                        if (myUser.username === 'revezzz') {
+                            document.getElementById('admin-give-btn').classList.remove('hidden');
+                        } else {
+                            document.getElementById('admin-give-btn').classList.add('hidden');
+                        }
+
+                        const blockBtn = document.getElementById('block-btn');
+                        if (data.iBlocked) {
+                            blockBtn.innerText = "Разблокировать";
+                            blockBtn.style.background = "var(--online)";
+                        } else {
+                            blockBtn.innerText = "Заблокировать";
+                            blockBtn.style.background = "var(--danger)";
+                        }
                     }
                     
-                    // Запрашиваем NFT этого пользователя
                     ws.send(JSON.stringify({ type: 'get_nfts', target: u.username }));
                     document.getElementById('profile-view-overlay').classList.remove('hidden');
                 }
@@ -427,7 +494,7 @@
                 if (data.type === 'user_nfts') {
                     const grid = document.getElementById('view-nfts');
                     grid.innerHTML = '';
-                    if(data.nfts.length === 0) grid.innerHTML = '<p style="color:var(--text-muted); font-size:12px;">Пока нет NFT</p>';
+                    if(data.nfts.length === 0) grid.innerHTML = '<p style="color:var(--text-muted); font-size:12px; grid-column: 1 / -1;">Пока нет NFT</p>';
                     data.nfts.forEach(nft => {
                         grid.innerHTML += renderNftCard(nft, false);
                     });
@@ -436,18 +503,15 @@
                 if (data.type === 'marketplace_data') {
                     const grid = document.getElementById('market-grid');
                     grid.innerHTML = '';
-                    if(data.items.length === 0) grid.innerHTML = '<p style="color:var(--text-muted); font-size:12px;">Маркетплейс пуст</p>';
+                    if(data.items.length === 0) grid.innerHTML = '<p style="color:var(--text-muted); font-size:12px; grid-column: 1 / -1;">Маркетплейс пуст</p>';
                     data.items.forEach(nft => {
                         grid.innerHTML += renderNftCard(nft, true);
                     });
                 }
 
-                // АНИМАЦИЯ РУЛЕТКИ
                 if (data.type === 'nft_upgraded') {
                     const nft = data.nft;
                     const strip = document.getElementById('roulette-strip');
-                    
-                    // Прокручиваем на случайную позицию
                     const randomX = -(Math.random() * 2000 + 1000);
                     strip.style.transform = `translateX(${randomX}px)`;
                     
@@ -459,19 +523,73 @@
                         document.getElementById('result-rarity').style.color = rarityColors[nft.rarity];
                         myUser.coins = data.newBalance;
                         updateBalanceUI();
-                    }, 3100); // Ждем окончания анимации CSS (3s)
+                    }, 3100);
                 }
 
-                if (data.type === 'error') {
-                    alert(data.message);
-                    document.getElementById('spin-btn').style.display = 'block';
-                }
-                
-                if (data.type === 'update_coins') {
-                    myUser.coins = data.coins;
+                if (data.type === 'update_coins') { myUser.coins = data.coins; updateBalanceUI(); }
+                if (data.type === 'profile_saved') {
+                    myUser = data.user;
+                    selectedAvatarBase64 = myUser.avatar;
                     updateBalanceUI();
+                    alert('Профиль успешно обновлен!');
+                    closeModal('settings-overlay');
+                    openMyProfile(); 
                 }
+                if (data.type === 'group_created') {
+                    ws.send(JSON.stringify({ type: 'get_groups' }));
+                    closeModal('group-overlay');
+                }
+                if (data.type === 'error') alert(data.message);
             };
+        }
+
+        function renderNftCard(nft, isMarket = false) {
+            const baseSvg = GIFTS[nft.base_type] || GIFTS['gift_bear'];
+            const rarityColors = { 'Common': '#7f91a4', 'Rare': '#5eb5f7', 'Epic': '#db2777', 'Legendary': '#fbbf24' };
+            const color = rarityColors[nft.rarity] || '#fff';
+            
+            let buyBtn = '';
+            if (isMarket) {
+                buyBtn = `<button onclick="buyNft('${nft.id}', ${nft.price})" style="width:100%; padding:5px; margin-top:5px; background:var(--gold); color:black; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">Купить</button>`;
+            } else {
+                buyBtn = `<button onclick="listNft('${nft.id}')" style="width:100%; padding:5px; margin-top:5px; background:var(--accent); color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">Продать</button>`;
+            }
+
+            return `
+                <div class="nft-card" style="border-color: ${color};">
+                    <div class="nft-bg" style="background: ${nft.color}"></div>
+                    ${baseSvg}
+                    <div class="nft-info">
+                        <div class="nft-rarity" style="color: ${color};">${nft.rarity}</div>
+                        <div class="nft-num">#${nft.num}</div>
+                        ${isMarket ? `<div style="font-size:12px; color:var(--gold); margin-top:3px;">${nft.price} R</div>` : ''}
+                        ${buyBtn}
+                    </div>
+                </div>
+            `;
+        }
+
+        let currentUpgradeBase = null;
+        function openRoulette(baseType) {
+            currentUpgradeBase = baseType;
+            document.getElementById('roulette-overlay').classList.remove('hidden');
+            document.getElementById('roulette-result').classList.add('hidden');
+            document.getElementById('spin-btn').style.display = 'block';
+            
+            const strip = document.getElementById('roulette-strip');
+            strip.style.transform = 'translateX(0)';
+            strip.innerHTML = '';
+            for(let i=0; i<50; i++) {
+                const rarities = ['Common', 'Rare', 'Epic', 'Legendary'];
+                const randomR = rarities[Math.floor(Math.random() * rarities.length)];
+                const svg = GIFTS[baseType].replace('<svg', `<svg style="filter: drop-shadow(0 0 5px ${randomR==='Legendary'?'#fbbf24':'transparent'});"`);
+                strip.innerHTML += `<div class="roulette-item">${svg}</div>`;
+            }
+        }
+
+        function startRoulette() {
+            document.getElementById('spin-btn').style.display = 'none';
+            ws.send(JSON.stringify({ type: 'upgrade_to_nft', base_type: currentUpgradeBase, cost: 1000 }));
         }
 
         function listNft(id) {
@@ -488,19 +606,284 @@
             }
         }
 
-        // ... (остальные функции чата, поиска и т.д. остаются без изменений, 
-        // так как они уже работают. Я убрал их для краткости, но в полном коде они есть)
+        function renderChats() {
+            const list = document.getElementById('chat-list');
+            list.innerHTML = '';
+            const query = document.getElementById('search-input').value.toLowerCase().trim();
+
+            if (query.length === 0) {
+                myGroups.forEach(g => {
+                    const div = document.createElement('div');
+                    div.className = 'chat-item';
+                    div.onclick = () => openChat('group_' + g.id, 'group', g.name, '');
+                    div.innerHTML = `
+                        <div class="avatar-box" style="background:#5eb5f7; font-size:24px;">👥</div>
+                        <div class="chat-info">
+                            <div class="chat-top"><span class="chat-name">${g.name}</span></div>
+                            <div class="chat-bottom"><span class="chat-msg">Групповой чат</span></div>
+                        </div>`;
+                    list.appendChild(div);
+                });
+
+                allUsers.filter(u => myContacts.includes(u.username)).forEach(u => {
+                    const div = document.createElement('div');
+                    div.className = 'chat-item';
+                    div.onclick = () => openChat(u.username, 'user', u.display_name || u.username, u.status);
+                    const avatarHtml = u.avatar ? `<img src="${u.avatar}">` : '👤';
+                    const dotClass = u.status === 'online' ? 'online' : 'offline';
+                    const unread = unreadMessages[u.username] || 0;
+                    
+                    div.innerHTML = `
+                        <div class="avatar-box">${avatarHtml}<div class="status-dot ${dotClass}"></div></div>
+                        <div class="chat-info">
+                            <div class="chat-top"><span class="chat-name">${u.display_name || u.username}</span></div>
+                            <div class="chat-bottom">
+                                <span class="chat-msg">${u.bio || 'Нажмите, чтобы написать'}</span>
+                                ${unread > 0 ? `<span class="unread-badge">${unread}</span>` : ''}
+                            </div>
+                        </div>`;
+                    list.appendChild(div);
+                });
+
+                if (myGroups.length === 0 && myContacts.length === 0) {
+                    list.innerHTML = '<div style="text-align:center; color:var(--text-muted); font-size:13px; margin-top:20px;">У вас пока нет чатов.</div>';
+                }
+            } else {
+                allUsers.filter(u => {
+                    if (u.username === myUser.username) return false;
+                    const uName = u.username ? u.username.toLowerCase() : '';
+                    const uId = u.six_digit_id ? u.six_digit_id.toString() : '';
+                    const uDisplay = u.display_name ? u.display_name.toLowerCase() : '';
+                    return uName.includes(query) || uId.includes(query) || uDisplay.includes(query);
+                }).forEach(u => {
+                    const div = document.createElement('div');
+                    div.className = 'chat-item';
+                    div.onclick = () => {
+                        if (!myContacts.includes(u.username)) myContacts.push(u.username);
+                        openChat(u.username, 'user', u.display_name || u.username, u.status);
+                        document.getElementById('search-input').value = '';
+                        renderChats();
+                    };
+                    const avatarHtml = u.avatar ? `<img src="${u.avatar}">` : '👤';
+                    const dotClass = u.status === 'online' ? 'online' : 'offline';
+                    div.innerHTML = `
+                        <div class="avatar-box">${avatarHtml}<div class="status-dot ${dotClass}"></div></div>
+                        <div class="chat-info">
+                            <div class="chat-top"><span class="chat-name">${u.display_name || u.username}</span></div>
+                            <div class="chat-bottom"><span class="chat-msg">ID: ${u.six_digit_id}</span></div>
+                        </div>`;
+                    list.appendChild(div);
+                });
+            }
+        }
+
+        function openChat(id, type, name, status) {
+            currentChatId = id;
+            currentChatType = type;
+            document.getElementById('chat-with').innerText = name;
+            document.getElementById('chat-status').innerText = status === 'online' ? 'В сети' : 'Был(а) недавно';
+            
+            const userObj = allUsers.find(u => u.username === id);
+            if (userObj) {
+                const avatarHtml = userObj.avatar ? `<img src="${userObj.avatar}">` : '👤';
+                const dotClass = status === 'online' ? 'online' : 'offline';
+                document.getElementById('chat-header-avatar').innerHTML = `${avatarHtml}<div class="status-dot ${dotClass}"></div>`;
+            } else {
+                document.getElementById('chat-header-avatar').innerHTML = `<div style="background:#5eb5f7; width:100%; height:100%; display:flex; justify-content:center; align-items:center; font-size:24px;">👥</div>`;
+            }
+
+            document.getElementById('messages').innerHTML = ''; 
+            ws.send(JSON.stringify({ type: 'get_history', with: id }));
+            
+            document.getElementById('message-input').disabled = false;
+            document.getElementById('send-btn').disabled = false;
+            document.getElementById('gift-btn').disabled = (type === 'group'); 
+            
+            unreadMessages[id] = 0;
+            renderChats();
+
+            if(window.innerWidth <= 768) {
+                document.getElementById('sidebar').style.display = 'none';
+                const chatArea = document.getElementById('chat-area');
+                chatArea.style.display = 'flex';
+                chatArea.classList.add('active');
+                chatArea.classList.remove('animate-out');
+            }
+        }
+
+        function closeChat() {
+            if(window.innerWidth <= 768) {
+                const chatArea = document.getElementById('chat-area');
+                chatArea.classList.add('animate-out');
+                chatArea.classList.remove('active');
+                setTimeout(() => {
+                    chatArea.style.display = 'none';
+                    document.getElementById('sidebar').style.display = 'flex';
+                    currentChatId = null;
+                }, 250);
+            } else {
+                currentChatId = null;
+            }
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('message-input');
+            const text = input.value.trim();
+            if (!text || !currentChatId) return;
+
+            if (currentChatType === 'user') {
+                ws.send(JSON.stringify({ type: 'private', from: myUser.username, to: currentChatId, text: text }));
+                if (!myContacts.includes(currentChatId)) myContacts.push(currentChatId);
+            } else {
+                const gId = currentChatId.split('_')[1];
+                ws.send(JSON.stringify({ type: 'group_message', from: myUser.username, groupId: gId, text: text }));
+            }
+            addMsgToScreen(`${text} <span class="msg-time">${new Date().toLocaleTimeString()}</span>`, 'my-msg', true);
+            input.value = '';
+            renderChats();
+        }
+
+        document.getElementById('message-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+
+        function addMsgToScreen(html, className, scroll) {
+            const div = document.createElement('div');
+            div.className = 'msg-bubble ' + className;
+            div.innerHTML = html;
+            document.getElementById('messages').appendChild(div);
+            if(scroll) document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+        }
+
+        function addGiftToScreen(giftId, senderName, comment) {
+            const div = document.createElement('div');
+            div.className = 'gift-event';
+            let wishText = (comment && comment !== 'undefined') ? `«${comment}»` : '';
+            let svgHtml = GIFTS[giftId] || giftId;
+
+            div.innerHTML = `
+                ${svgHtml}
+                <div class="gift-text">
+                    ${senderName} дарит подарок!
+                    ${wishText ? `<br>${wishText}` : ''}
+                </div>
+            `;
+            document.getElementById('messages').appendChild(div);
+            document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+        }
+
+        function openUserProfile(username) {
+            if(!username || currentChatType === 'group') return;
+            ws.send(JSON.stringify({ type: 'get_profile', target: username }));
+        }
+
+        function openMyProfile() {
+            ws.send(JSON.stringify({ type: 'get_profile', target: myUser.username }));
+        }
+
+        function openSettings() {
+            closeModal('profile-view-overlay'); 
+            document.getElementById('settings-display-name').value = myUser.display_name;
+            document.getElementById('settings-six-id').value = myUser.six_digit_id;
+            document.getElementById('settings-bio').value = myUser.bio;
+            document.getElementById('settings-avatar-preview').innerHTML = myUser.avatar ? `<img src="${myUser.avatar}">` : '👤';
+            selectedAvatarBase64 = myUser.avatar;
+            updateBalanceUI(); 
+            document.getElementById('redeem-msg').innerText = ''; 
+            document.getElementById('settings-overlay').classList.remove('hidden');
+        }
+
+        function saveProfile() {
+            ws.send(JSON.stringify({
+                type: 'update_profile',
+                display_name: document.getElementById('settings-display-name').value.trim(),
+                six_digit_id: document.getElementById('settings-six-id').value.trim(),
+                bio: document.getElementById('settings-bio').value.trim(),
+                avatar: selectedAvatarBase64,
+                status: 'online'
+            }));
+        }
+
+        function openCreateGroup() {
+            const list = document.getElementById('group-members-list');
+            list.innerHTML = allUsers.filter(u => u.username !== myUser.username).map(u => `
+                <label style="display:flex; padding:10px; border-bottom:1px solid var(--border); align-items:center; cursor:pointer;">
+                    <input type="checkbox" value="${u.username}" style="width:20px; margin-right:10px;">
+                    ${u.display_name}
+                </label>
+            `).join('');
+            document.getElementById('group-overlay').classList.remove('hidden');
+        }
+
+        function createGroup() {
+            const name = document.getElementById('group-name').value.trim();
+            if(!name) return alert("Введите название группы!");
+            const members = Array.from(document.querySelectorAll('#group-members-list input:checked')).map(cb => cb.value);
+            ws.send(JSON.stringify({ type: 'create_group', name: name, members: members }));
+        }
+
+        function openMarket() {
+            ws.send(JSON.stringify({ type: 'get_marketplace' }));
+            document.getElementById('market-overlay').classList.remove('hidden');
+        }
+
+        function openShop() { 
+            if(currentChatId && currentChatType==='user') {
+                document.getElementById('shop-overlay').classList.remove('hidden'); 
+            }
+        }
         
-        function logout() { localStorage.removeItem('rivo_user'); localStorage.removeItem('rivo_pass'); location.reload(); }
-        function toggleAuthMode() { isLoginMode = !isLoginMode; document.getElementById('switch-text').innerText = isLoginMode ? 'Нет аккаунта? Зарегистрироваться' : 'Уже есть аккаунт? Войти'; }
-        function renderChats() { /* ... */ }
-        function openChat(id, type) { /* ... */ }
-        function closeChat() { /* ... */ }
-        function sendMessage() { /* ... */ }
-        function openUserProfile(user) { ws.send(JSON.stringify({ type: 'get_profile', target: user })); }
-        function openMyProfile() { ws.send(JSON.stringify({ type: 'get_profile', target: myUser.username })); }
-        function openSettings() { /* ... */ }
-        function openMarket() { ws.send(JSON.stringify({ type: 'get_marketplace' })); document.getElementById('market-overlay').classList.remove('hidden'); }
+        function buyGift(giftId, price) {
+            const comment = prompt("Пожелание к подарку:", "Спасибо!");
+            if(comment === null) return;
+            ws.send(JSON.stringify({ type: 'private', from: myUser.username, to: currentChatId, text: giftId, isGift: true, giftPrice: price, comment: comment }));
+            addGiftToScreen(giftId, "Вы", comment);
+            closeModal('shop-overlay');
+        }
+        
+        function toggleBlock() {
+            if (!viewingUser) return;
+            if (currentUserBlocked) {
+                ws.send(JSON.stringify({ type: 'unblock_user', target: viewingUser }));
+            } else {
+                if(confirm('Вы уверены, что хотите заблокировать пользователя?')) {
+                    ws.send(JSON.stringify({ type: 'block_user', target: viewingUser }));
+                }
+            }
+        }
+
+        function deleteChat() {
+            if (!viewingUser) return;
+            if(confirm('Удалить чат? История сообщений будет стерта.')) {
+                ws.send(JSON.stringify({ type: 'delete_chat', target: viewingUser }));
+            }
+        }
+
+        function adminGiveSelfCoins() {
+            if(!myUser || myUser.username !== 'revezzz') return;
+            ws.send(JSON.stringify({ type: 'admin_give_coins', target: myUser.username, amount: 10000 }));
+        }
+
+        function adminGiveCoins() {
+            if(!viewingUser || myUser.username !== 'revezzz') return;
+            const amount = prompt(`Сколько R-коинов начислить пользователю ${viewingUser}?`, "100");
+            if(!amount || isNaN(amount)) return;
+            ws.send(JSON.stringify({ type: 'admin_give_coins', target: viewingUser, amount: parseInt(amount) }));
+        }
+
+        function redeemPromo() {
+            const code = document.getElementById('redeem-code-input').value.trim();
+            if(!code) return;
+            ws.send(JSON.stringify({ type: 'redeem_promo', code: code }));
+        }
+
+        function createPromo() {
+            const code = document.getElementById('promo-code-input').value.trim();
+            const reward = parseInt(document.getElementById('promo-reward-input').value);
+            const limit = parseInt(document.getElementById('promo-limit-input').value);
+            
+            if(!code || !reward || !limit) return alert("Заполните все поля (название, награда, лимит)!");
+            ws.send(JSON.stringify({ type: 'create_promo', code: code, reward: reward, max_uses: limit }));
+            document.getElementById('promo-code-input').value = '';
+        }
     </script>
 </body>
 </html>
