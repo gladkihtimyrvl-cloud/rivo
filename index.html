@@ -157,8 +157,10 @@
                 <button id="admin-give-btn" class="admin-btn hidden" onclick="adminGiveCoins()" style="margin-top:10px;">Начислить 100 R этому юзеру</button>
             </div>
             
-            <div id="my-profile-actions" class="hidden" style="margin-top:20px;">
-                <button onclick="openSettings()" style="background:var(--accent);">Редактировать профиль</button>
+            <!-- КНОПКИ ДЛЯ СВОЕГО ПРОФИЛЯ -->
+            <div id="my-profile-actions" class="hidden" style="margin-top:20px; display: flex; flex-direction: column; gap: 10px;">
+                <button onclick="openSettings()" style="background:var(--accent); margin: 0;">Редактировать профиль</button>
+                <button onclick="logout()" style="background:var(--danger); margin: 0;">Выйти из аккаунта</button>
             </div>
 
             <button onclick="document.getElementById('profile-view-overlay').classList.add('hidden')" style="margin-top:10px; background:transparent; border:1px solid var(--border);">Закрыть</button>
@@ -173,7 +175,7 @@
                 <span id="settings-balance">0</span>
             </div>
 
-            <!-- НОВЫЙ БЛОК ВВОДА ПРОМОКОДА -->
+            <!-- БЛОК ВВОДА ПРОМОКОДА -->
             <div style="margin-bottom: 20px; background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; border: 1px dashed var(--accent);">
                 <label style="font-size:12px; color:var(--accent); font-weight:bold; margin-bottom:5px; display:block;">Ввести промокод</label>
                 <div style="display:flex; gap:8px;">
@@ -195,8 +197,6 @@
             <label style="font-size:12px; color:var(--text-muted);">О себе</label>
             <input type="text" id="settings-bio">
             <button onclick="saveProfile()">Сохранить</button>
-            <button onclick="logout()" style="background:var(--danger);">Выйти</button>
-            <button onclick="document.getElementById('settings-overlay').classList.add('hidden')" style="background:transparent; border:1px solid var(--border);">Отмена</button>
             
             <div id="admin-panel" class="hidden" style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 15px;">
                 <h3 style="text-align:center; font-size:16px; color: var(--gold);">Панель создателя</h3>
@@ -208,6 +208,10 @@
                 </div>
                 <div id="promo-admin-msg" style="text-align:center; font-size:12px; margin-top:10px; font-weight:bold;"></div>
             </div>
+
+            <!-- КНОПКИ ВЫХОДА И ОТМЕНЫ В САМОМ НИЗУ НАСТРОЕК -->
+            <button onclick="logout()" style="background:var(--danger); margin-top: 20px;">Выйти из аккаунта</button>
+            <button onclick="document.getElementById('settings-overlay').classList.add('hidden')" style="background:transparent; border:1px solid var(--border);">Отмена</button>
         </div>
     </div>
 
@@ -347,7 +351,13 @@
             }
         };
 
-        function logout() { localStorage.removeItem('rivo_user'); localStorage.removeItem('rivo_pass'); location.reload(); }
+        // ВЫХОД
+        function logout() { 
+            localStorage.removeItem('rivo_user'); 
+            localStorage.removeItem('rivo_pass'); 
+            location.reload(); 
+        }
+
         function toggleAuthMode() { isLoginMode = !isLoginMode; document.getElementById('main-auth-btn').innerText = isLoginMode ? 'Войти' : 'Создать аккаунт'; document.getElementById('switch-text').innerText = isLoginMode ? 'Нет аккаунта? Зарегистрироваться' : 'Уже есть аккаунт? Войти'; document.getElementById('auth-error').innerText = ''; }
 
         function onSearchInput() {
@@ -535,14 +545,12 @@
                     document.getElementById('group-overlay').classList.add('hidden');
                 }
                 
-                // ОБРАБОТКА ПРОМОКОДОВ
                 if (data.type === 'promo_result') {
                     if (data.newBalance !== undefined) {
                         myUser.coins = data.newBalance;
                         updateBalanceUI();
                     }
                     
-                    // Показываем сообщение в настройках (если мы там)
                     const redeemMsg = document.getElementById('redeem-msg');
                     if(redeemMsg) {
                         redeemMsg.innerText = data.message;
@@ -553,7 +561,6 @@
                         }
                     }
                     
-                    // Показываем сообщение в админке (если создаем промокод)
                     const adminMsg = document.getElementById('promo-admin-msg');
                     if(adminMsg) {
                         adminMsg.innerText = data.message;
@@ -741,7 +748,7 @@
             document.getElementById('settings-avatar-preview').innerHTML = myUser.avatar ? `<img src="${myUser.avatar}">` : '👤';
             selectedAvatarBase64 = myUser.avatar;
             updateBalanceUI(); 
-            document.getElementById('redeem-msg').innerText = ''; // Очищаем старое сообщение
+            document.getElementById('redeem-msg').innerText = ''; 
             document.getElementById('settings-overlay').classList.remove('hidden');
         }
 
@@ -822,7 +829,6 @@
             ws.send(JSON.stringify({ type: 'admin_give_coins', target: viewingUser, amount: parseInt(amount) }));
         }
 
-        // ВВОД ПРОМОКОДА
         function redeemPromo() {
             const code = document.getElementById('redeem-code-input').value.trim();
             if(!code) return;
