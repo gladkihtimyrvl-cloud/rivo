@@ -29,7 +29,6 @@ db.serialize(() => {
     db.run(`CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY AUTOINCREMENT, sender TEXT, receiver TEXT, text TEXT, isGift INTEGER, timestamp TEXT)`);
     db.run(`CREATE TABLE IF NOT EXISTS received_gifts (id INTEGER PRIMARY KEY AUTOINCREMENT, sender TEXT, receiver TEXT, gift_emoji TEXT, comment TEXT, timestamp TEXT)`);
     db.run(`CREATE TABLE IF NOT EXISTS promocodes (code TEXT UNIQUE, reward INTEGER, max_uses INTEGER, current_uses INTEGER DEFAULT 0)`);
-    // НОВАЯ ТАБЛИЦА ДЛЯ БЛОКИРОВОК
     db.run(`CREATE TABLE IF NOT EXISTS blocks (blocker TEXT, blocked TEXT, PRIMARY KEY (blocker, blocked))`);
 });
 
@@ -76,21 +75,22 @@ wss.on('connection', function connection(ws) {
 
             if (data.type === 'update_profile') {
                 db.get(`SELECT username FROM users WHERE six_digit_id = ? AND username != ?`, [data.six_digit_id, ws.username], (err, row) => {
-                    if (row) return ws.send(JSON.stringify({ type: 'error', message: 'Этот 6-значный ID уже занят!' }));
+                    if (row) return ws.send(JSON.stringify({ type: 'error', message: 'Этот 6-значный ID уже занят другим пользователем!' }));
+                    
                     db.run(`UPDATE users SET status = ?, bio = ?, avatar = ?, display_name = ?, six_digit_id = ? WHERE username = ?`, 
                     [data.status, data.bio, data.avatar, data.display_name, data.six_digit_id, ws.username], () => {
                         broadcastAllUsers();
-                        db.get(`SELECT display_name, six_digit_id FROM users WHERE username = ?`, [ws.username], (e, r) => {
-                            ws.send(JSON.stringify({ type: 'profile_updated', display_name: r.display_name, six_digit_id: r.six_digit_id }));
+                        db.get(`SELECT * FROM users WHERE username = ?`, [ws.username], (e, updatedUser) => {
+                            // Отправляем обновленные данные обратно клиенту
+                            ws.send(JSON.stringify({ type: 'profile_saved', user: updatedUser }));
                         });
                     });
                 });
             }
 
+            // ОСТАЛЬНАЯ ЛОГИКА (ЧАТЫ, БЛОКИРОВКИ И Т.Д.)
             if (data.type === 'get_chat_list') {
-                db.all(`SELECT DISTINCT CASE WHEN sender = ? THEN receiver ELSE sender END as contact 
-                        FROM messages 
-                        WHERE (sender = ? OR receiver = ?) AND receiver NOT LIKE 'group_%'`, 
+                db.all(`SELECT DISTINCT CASE WHEN sender = ? THEN receiver ELSE sender END as contact FROM messages WHERE (sender = ? OR receiver = ?) AND receiver NOT LIKE 'group_%'`, 
                 [ws.username, ws.username, ws.username], (err, rows) => {
                     if (!err) {
                         const contacts = rows.map(r => r.contact);
@@ -108,13 +108,9 @@ wss.on('connection', function connection(ws) {
                 });
             }
 
-            // ОТПРАВКА ЛИЧНЫХ СООБЩЕНИЙ (С ПРОВЕРКОЙ НА БЛОКИРОВКУ)
             if (data.type === 'private' && !data.isGift) {
-                // Проверяем, не заблокировал ли нас получатель
                 db.get(`SELECT * FROM blocks WHERE blocker = ? AND blocked = ?`, [data.to, ws.username], (err, block) => {
-                    if (block) {
-                        return ws.send(JSON.stringify({ type: 'error', message: 'Вы заблокированы этим пользователем.' }));
-                    }
+                    if (block) return ws.send(JSON.stringify({ type: 'error', message: 'Вы заблокированы этим пользователем.' }));
                     const time = new Date().toLocaleTimeString();
                     db.run(`INSERT INTO messages (sender, receiver, text, isGift, timestamp) VALUES (?, ?, ?, 0, ?)`, [data.from, data.to, data.text, time]);
                     const recipientSocket = clients.get(data.to);
@@ -143,18 +139,9 @@ wss.on('connection', function connection(ws) {
             
             if (data.type === 'get_profile') {
                 db.get(`SELECT username, display_name, six_digit_id, status, bio, avatar, coins FROM users WHERE username = ?`, [data.target], (err, user) => {
-                    // Проверяем, заблокировал ли я его, и заблокировал ли он меня
                     db.get(`SELECT * FROM blocks WHERE blocker = ? AND blocked = ?`, [ws.username, data.target], (e, iBlocked) => {
-                        db.get(`SELECT * FROM blocks WHERE blocker = ? AND blocked = ?`, [data.target, ws.username], (e, heBlocked) => {
-                            db.all(`SELECT * FROM received_gifts WHERE receiver = ? ORDER BY id DESC`, [data.target], (err, gifts) => {
-                                ws.send(JSON.stringify({ 
-                                    type: 'profile_data', 
-                                    user: user, 
-                                    gifts: gifts,
-                                    iBlocked: !!iBlocked,
-                                    heBlocked: !!heBlocked
-                                }));
-                            });
+                        db.all(`SELECT * FROM received_gifts WHERE receiver = ? ORDER BY id DESC`, [data.target], (err, gifts) => {
+                            ws.send(JSON.stringify({ type: 'profile_data', user: user, gifts: gifts, iBlocked: !!iBlocked }));
                         });
                     });
                 });
@@ -169,11 +156,8 @@ wss.on('connection', function connection(ws) {
             if (data.type === 'private' && data.isGift) {
                 db.get(`SELECT coins FROM users WHERE username = ?`, [ws.username], (err, row) => {
                     if (row.coins < data.giftPrice) return ws.send(JSON.stringify({ type: 'error', message: 'Недостаточно R-коинов!' }));
-                    
-                    // Проверка на блокировку для подарков
                     db.get(`SELECT * FROM blocks WHERE blocker = ? AND blocked = ?`, [data.to, ws.username], (err, block) => {
                         if (block) return ws.send(JSON.stringify({ type: 'error', message: 'Вы заблокированы этим пользователем.' }));
-
                         db.run(`UPDATE users SET coins = coins - ? WHERE username = ?`, [data.giftPrice, ws.username], () => {
                             const time = new Date().toLocaleTimeString();
                             db.run(`INSERT INTO messages (sender, receiver, text, isGift, timestamp) VALUES (?, ?, ?, 1, ?)`, [data.from, data.to, data.text, time]);
@@ -186,7 +170,6 @@ wss.on('connection', function connection(ws) {
                 });
             }
 
-            // БЛОКИРОВКА / РАЗБЛОКИРОВКА
             if (data.type === 'block_user') {
                 db.run(`INSERT OR IGNORE INTO blocks (blocker, blocked) VALUES (?, ?)`, [ws.username, data.target], () => {
                     ws.send(JSON.stringify({ type: 'action_success', action: 'block', target: data.target }));
@@ -198,7 +181,6 @@ wss.on('connection', function connection(ws) {
                 });
             }
 
-            // УДАЛЕНИЕ ЧАТА
             if (data.type === 'delete_chat') {
                 db.run(`DELETE FROM messages WHERE (sender = ? AND receiver = ?) OR (sender = ? AND receiver = ?)`, 
                 [ws.username, data.target, data.target, ws.username], () => {
@@ -206,7 +188,6 @@ wss.on('connection', function connection(ws) {
                 });
             }
 
-            // СОЗДАНИЕ ПРОМОКОДА (ТОЛЬКО ДЛЯ revezzz)
             if (data.type === 'create_promo') {
                 if (ws.username !== 'revezzz') return ws.send(JSON.stringify({ type: 'promo_result', success: false, message: 'У вас нет прав!' }));
                 const code = data.code.toUpperCase();
