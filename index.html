@@ -16,13 +16,18 @@
         
         #app { display: flex; width: 100%; height: 100%; }
 
-        .coin-icon { vertical-align: middle; width: 18px; height: 18px; margin-right: 3px; margin-top: -2px; }
+        /* ИКОНКА ЗОЛОТОЙ МОНЕТЫ */
+        .coin-icon { vertical-align: middle; width: 16px; height: 16px; margin-right: 4px; margin-top: -2px; }
 
         /* ЛЕВАЯ ПАНЕЛЬ */
         #sidebar { width: 340px; background: var(--bg-panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 2; }
         .sidebar-header { padding: 10px 15px; display: flex; align-items: center; justify-content: space-between; background: var(--bg-panel); }
         .menu-btn { cursor: pointer; font-size: 20px; color: var(--text-muted); padding: 5px; }
         .menu-btn:hover { color: var(--text-main); }
+        
+        /* БАЛАНС В ШАПКЕ */
+        .header-balance { background: rgba(251, 191, 36, 0.15); border: 1px solid var(--gold); color: var(--gold); padding: 2px 8px; border-radius: 10px; font-size: 13px; font-weight: bold; display: flex; align-items: center; }
+
         #search-input { margin: 5px 15px 15px; padding: 10px 15px; border-radius: 20px; border: none; background: var(--bg-input); color: white; outline: none; font-size: 14px; }
 
         #chat-list { flex: 1; overflow-y: auto; }
@@ -79,6 +84,7 @@
         .profile-label { font-size: 12px; color: var(--accent); margin-bottom: 4px; }
         .profile-value { font-size: 15px; color: white; }
         
+        /* ЗОЛОТАЯ ПЛАШКА БАЛАНСА */
         .profile-balance { background: rgba(251, 191, 36, 0.1); border: 1px solid var(--gold); padding: 12px 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
         .profile-balance span:first-child { color: var(--gold); font-weight: 600; font-size: 15px; }
         .profile-balance span:last-child { color: var(--gold); font-weight: bold; font-size: 18px; display: flex; align-items: center;}
@@ -93,6 +99,12 @@
         .gift-icon { font-size: 60px; }
         .gift-text { background: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 15px; margin-top: 5px; display: inline-block; font-size: 13px; color: #fbbf24; }
         @keyframes pop { 0% { transform: scale(0); } 80% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+        /* Стили для подарков в профиле */
+        .profile-gift-card { background: var(--bg-main); padding: 10px; border-radius: 10px; text-align: center; width: 90px; border: 1px solid var(--border); }
+        .profile-gift-emoji { font-size: 28px; margin-bottom: 5px; }
+        .profile-gift-sender { font-size: 10px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .profile-gift-comment { font-size: 10px; color: var(--gold); margin-top: 3px; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
         #back-btn { display: none; cursor: pointer; font-size: 24px; color: var(--accent); margin-right: 10px; }
         @media (max-width: 768px) {
@@ -117,6 +129,7 @@
         </div>
     </div>
 
+    <!-- ПРОСМОТР ПРОФИЛЯ (Других людей) -->
     <div id="profile-view-overlay" class="modal-overlay hidden">
         <div class="modal-box">
             <div class="profile-avatar-big" id="view-avatar"></div>
@@ -132,8 +145,8 @@
                 <span id="view-balance">0</span>
             </div>
 
-            <h4 style="margin-top:20px; color:var(--text-muted);">Подарки</h4>
-            <div id="view-gifts" style="display:flex; flex-wrap:wrap; gap:10px;"></div>
+            <h4 style="margin-top:20px; color:var(--text-muted); text-align:center;">Подарки</h4>
+            <div id="view-gifts" style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center;"></div>
             
             <div style="display:flex; gap:10px; margin-top:20px;">
                 <button id="block-btn" onclick="toggleBlock()" style="background:var(--danger); flex:1; margin:0;">Заблокировать</button>
@@ -144,9 +157,17 @@
         </div>
     </div>
 
+    <!-- НАСТРОЙКИ (Свой профиль) -->
     <div id="settings-overlay" class="modal-overlay hidden">
         <div class="modal-box">
-            <h2>Настройки</h2>
+            <h2>Настройки профиля</h2>
+            
+            <!-- БАЛАНС В НАСТРОЙКАХ -->
+            <div class="profile-balance">
+                <span>Ваш баланс</span>
+                <span id="settings-balance"><svg class="coin-icon" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="url(#paint0_linear)"/><circle cx="12" cy="12" r="8" stroke="#B45309" stroke-width="1.5"/><path d="M9 16V8H12.5C14.433 8 16 9.119 16 11C16 12.881 14.433 14 12.5 14H11V16H9ZM11 12H12.5C13.3284 12 14 11.552 14 11C14 10.448 13.3284 10 12.5 10H11V12Z" fill="#78350F"/><defs><linearGradient id="paint0_linear" x1="12" y1="2" x2="12" y2="22" gradientUnits="userSpaceOnUse"><stop stop-color="#FDE047"/><stop offset="1" stop-color="#EAB308"/></linearGradient></defs></svg> 0</span>
+            </div>
+
             <div style="text-align:center; margin-bottom:15px;">
                 <div class="profile-avatar-big" id="settings-avatar-preview"></div>
                 <label for="avatar-upload" style="background:var(--bg-input); padding:8px 15px; border-radius:20px; cursor:pointer; font-size:13px;">Сменить фото</label>
@@ -172,9 +193,14 @@
         </div>
     </div>
 
+    <!-- МАГАЗИН ПОДАРКОВ -->
     <div id="shop-overlay" class="modal-overlay hidden">
         <div class="modal-box">
-            <h2>Подарки</h2>
+            <h2>Магазин подарков</h2>
+            <!-- БАЛАНС В МАГАЗИНЕ -->
+            <div style="text-align:center; color:var(--gold); margin-bottom:15px; font-weight:bold; font-size:16px;">
+                Ваш баланс: <span id="shop-balance">0</span> R
+            </div>
             <div class="shop-grid" id="shop-grid"></div>
             <button onclick="document.getElementById('shop-overlay').classList.add('hidden')" style="margin-top:15px; background:var(--bg-input);">Отмена</button>
         </div>
@@ -195,7 +221,14 @@
         <div id="sidebar">
             <div class="sidebar-header">
                 <div class="menu-btn" onclick="openSettings()">☰</div>
-                <div style="font-weight:bold; font-size:18px;">Rivo</div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="font-weight:bold; font-size:18px;">Rivo</div>
+                    <!-- БАЛАНС В ШАПКЕ -->
+                    <div class="header-balance">
+                        <svg class="coin-icon" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="url(#paint0_linear)"/><circle cx="12" cy="12" r="8" stroke="#B45309" stroke-width="1.5"/><path d="M9 16V8H12.5C14.433 8 16 9.119 16 11C16 12.881 14.433 14 12.5 14H11V16H9ZM11 12H12.5C13.3284 12 14 11.552 14 11C14 10.448 13.3284 10 12.5 10H11V12Z" fill="#78350F"/><defs><linearGradient id="paint0_linear" x1="12" y1="2" x2="12" y2="22" gradientUnits="userSpaceOnUse"><stop stop-color="#FDE047"/><stop offset="1" stop-color="#EAB308"/></linearGradient></defs></svg>
+                        <span id="header-balance-val">0</span>
+                    </div>
+                </div>
                 <div class="menu-btn" onclick="openCreateGroup()">➕</div>
             </div>
             <input type="text" id="search-input" placeholder="Поиск (имя, @юзер или ID)..." oninput="renderChats()">
@@ -242,6 +275,16 @@
             { emoji: '🧸', price: 30 }, { emoji: '🍕', price: 40 }, { emoji: '🏆', price: 50 },
             { emoji: '💎', price: 100 }, { emoji: '👑', price: 500 }
         ];
+
+        // ФУНКЦИЯ ОБНОВЛЕНИЯ БАЛАНСА ВЕЗДЕ
+        function updateBalanceUI() {
+            if(!myUser) return;
+            const svg = `<svg class="coin-icon" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="url(#paint0_linear)"/><circle cx="12" cy="12" r="8" stroke="#B45309" stroke-width="1.5"/><path d="M9 16V8H12.5C14.433 8 16 9.119 16 11C16 12.881 14.433 14 12.5 14H11V16H9ZM11 12H12.5C13.3284 12 14 11.552 14 11C14 10.448 13.3284 10 12.5 10H11V12Z" fill="#78350F"/><defs><linearGradient id="paint0_linear" x1="12" y1="2" x2="12" y2="22" gradientUnits="userSpaceOnUse"><stop stop-color="#FDE047"/><stop offset="1" stop-color="#EAB308"/></linearGradient></defs></svg>`;
+            
+            document.getElementById('header-balance-val').innerText = myUser.coins;
+            document.getElementById('shop-balance').innerText = myUser.coins;
+            document.getElementById('settings-balance').innerHTML = `${svg} ${myUser.coins}`;
+        }
 
         function handleAvatarUpload(e) {
             const file = e.target.files[0];
@@ -320,6 +363,8 @@
                     document.getElementById('login-overlay').classList.add('hidden');
                     document.getElementById('app').classList.remove('hidden');
                     
+                    updateBalanceUI(); // Обновляем баланс при входе
+                    
                     ws.send(JSON.stringify({ type: 'get_groups' })); 
                     ws.send(JSON.stringify({ type: 'get_chat_list' })); 
                     setupAppLogic();
@@ -371,7 +416,8 @@
                     document.getElementById('view-username').innerText = '@' + u.username;
                     document.getElementById('view-bio').innerText = u.bio;
                     
-                    document.getElementById('view-balance').innerHTML = `<svg class="coin-icon" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="url(#paint0_linear)"/><circle cx="12" cy="12" r="8" stroke="#B45309" stroke-width="1.5"/><path d="M9 16V8H12.5C14.433 8 16 9.119 16 11C16 12.881 14.433 14 12.5 14H11V16H9ZM11 12H12.5C13.3284 12 14 11.552 14 11C14 10.448 13.3284 10 12.5 10H11V12Z" fill="#78350F"/><defs><linearGradient id="paint0_linear" x1="12" y1="2" x2="12" y2="22" gradientUnits="userSpaceOnUse"><stop stop-color="#FDE047"/><stop offset="1" stop-color="#EAB308"/></linearGradient></defs></svg> ${u.coins}`;
+                    const svg = `<svg class="coin-icon" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="url(#paint0_linear)"/><circle cx="12" cy="12" r="8" stroke="#B45309" stroke-width="1.5"/><path d="M9 16V8H12.5C14.433 8 16 9.119 16 11C16 12.881 14.433 14 12.5 14H11V16H9ZM11 12H12.5C13.3284 12 14 11.552 14 11C14 10.448 13.3284 10 12.5 10H11V12Z" fill="#78350F"/><defs><linearGradient id="paint0_linear" x1="12" y1="2" x2="12" y2="22" gradientUnits="userSpaceOnUse"><stop stop-color="#FDE047"/><stop offset="1" stop-color="#EAB308"/></linearGradient></defs></svg>`;
+                    document.getElementById('view-balance').innerHTML = `${svg} ${u.coins}`;
 
                     const blockBtn = document.getElementById('block-btn');
                     if (data.iBlocked) {
@@ -382,21 +428,30 @@
                         blockBtn.style.background = "var(--danger)";
                     }
 
+                    // ОТРИСОВКА ПОДАРКОВ В ПРОФИЛЕ
                     const giftsDiv = document.getElementById('view-gifts');
-                    giftsDiv.innerHTML = data.gifts.map(g => `
-                        <div style="background:var(--bg-main); padding:10px; border-radius:8px; text-align:center;">
-                            <div style="font-size:24px;">${g.gift_emoji}</div>
-                            <div style="font-size:10px; color:var(--text-muted);">от ${g.sender}</div>
-                        </div>
-                    `).join('');
+                    giftsDiv.innerHTML = '';
+                    if (data.gifts.length === 0) {
+                        giftsDiv.innerHTML = '<p style="color:var(--text-muted); font-size:13px; width:100%; text-align:center;">Пока нет подарков</p>';
+                    } else {
+                        data.gifts.forEach(g => {
+                            const div = document.createElement('div');
+                            div.className = 'profile-gift-card';
+                            div.innerHTML = `
+                                <div class="profile-gift-emoji">${g.gift_emoji}</div>
+                                <div class="profile-gift-sender">от ${g.sender}</div>
+                                ${g.comment ? `<div class="profile-gift-comment" title="${g.comment}">"${g.comment}"</div>` : ''}
+                            `;
+                            giftsDiv.appendChild(div);
+                        });
+                    }
                     document.getElementById('profile-view-overlay').classList.remove('hidden');
                 }
                 
                 if (data.type === 'profile_saved') {
-                    // Обновляем локальные данные пользователя после сохранения
                     myUser = data.user;
                     selectedAvatarBase64 = myUser.avatar;
-                    document.getElementById('my-name').innerText = myUser.display_name; // Обновляем имя в шапке (если оно есть)
+                    updateBalanceUI(); // Обновляем баланс после сохранения
                     alert('Профиль успешно обновлен!');
                     document.getElementById('settings-overlay').classList.add('hidden');
                 }
@@ -428,6 +483,7 @@
 
                 if (data.type === 'update_coins') {
                     myUser.coins = data.coins;
+                    updateBalanceUI(); // Обновляем баланс при получении/отправке подарка
                 }
                 if (data.type === 'group_created') {
                     ws.send(JSON.stringify({ type: 'get_groups' }));
@@ -486,11 +542,9 @@
             } else {
                 allUsers.filter(u => {
                     if (u.username === myUser.username) return false;
-                    // Делаем поиск более надежным (приводим всё к строкам)
                     const uName = u.username ? u.username.toLowerCase() : '';
                     const uId = u.six_digit_id ? u.six_digit_id.toString() : '';
                     const uDisplay = u.display_name ? u.display_name.toLowerCase() : '';
-                    
                     return uName.includes(query) || uId.includes(query) || uDisplay.includes(query);
                 }).forEach(u => {
                     const div = document.createElement('div');
@@ -589,11 +643,11 @@
             document.getElementById('settings-bio').value = myUser.bio;
             document.getElementById('settings-avatar-preview').innerHTML = myUser.avatar ? `<img src="${myUser.avatar}">` : '👤';
             selectedAvatarBase64 = myUser.avatar;
+            updateBalanceUI(); // Обновляем баланс в настройках при открытии
             document.getElementById('settings-overlay').classList.remove('hidden');
         }
 
         function saveProfile() {
-            // Отправляем запрос, но окно не закрываем, ждем ответа от сервера
             ws.send(JSON.stringify({
                 type: 'update_profile',
                 display_name: document.getElementById('settings-display-name').value.trim(),
@@ -622,7 +676,13 @@
             ws.send(JSON.stringify({ type: 'create_group', name: name, members: members }));
         }
 
-        function openShop() { if(currentChatId && currentChatType==='user') document.getElementById('shop-overlay').classList.remove('hidden'); }
+        function openShop() { 
+            if(currentChatId && currentChatType==='user') {
+                updateBalanceUI(); // Обновляем баланс перед открытием магазина
+                document.getElementById('shop-overlay').classList.remove('hidden'); 
+            }
+        }
+        
         function buyGift(emoji, price) {
             const comment = prompt("Пожелание к подарку:", "Спасибо!");
             if(comment === null) return;
