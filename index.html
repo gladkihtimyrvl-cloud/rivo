@@ -51,7 +51,6 @@
         .header-info:hover .chat-name { color: var(--accent); }
         .header-name { font-weight: 600; font-size: 16px; }
         .header-status { font-size: 13px; color: var(--text-muted); }
-        .balance-badge { background: rgba(251, 191, 36, 0.15); border: 1px solid var(--gold); color: var(--gold); padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 14px; display: flex; align-items: center; }
 
         #messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
         .msg-bubble { max-width: 60%; padding: 10px 14px; border-radius: 12px; word-wrap: break-word; font-size: 15px; line-height: 1.4; position: relative; }
@@ -118,7 +117,6 @@
         </div>
     </div>
 
-    <!-- ПРОСМОТР ПРОФИЛЯ -->
     <div id="profile-view-overlay" class="modal-overlay hidden">
         <div class="modal-box">
             <div class="profile-avatar-big" id="view-avatar"></div>
@@ -137,7 +135,6 @@
             <h4 style="margin-top:20px; color:var(--text-muted);">Подарки</h4>
             <div id="view-gifts" style="display:flex; flex-wrap:wrap; gap:10px;"></div>
             
-            <!-- КНОПКИ УПРАВЛЕНИЯ (БЛОКИРОВКА / УДАЛЕНИЕ) -->
             <div style="display:flex; gap:10px; margin-top:20px;">
                 <button id="block-btn" onclick="toggleBlock()" style="background:var(--danger); flex:1; margin:0;">Заблокировать</button>
                 <button onclick="deleteChat()" style="background:var(--bg-input); flex:1; margin:0;">Удалить чат</button>
@@ -147,7 +144,6 @@
         </div>
     </div>
 
-    <!-- НАСТРОЙКИ -->
     <div id="settings-overlay" class="modal-overlay hidden">
         <div class="modal-box">
             <h2>Настройки</h2>
@@ -166,7 +162,6 @@
             <button onclick="logout()" style="background:var(--danger);">Выйти</button>
             <button onclick="document.getElementById('settings-overlay').classList.add('hidden')" style="background:transparent; border:1px solid var(--border);">Отмена</button>
             
-            <!-- ПАНЕЛЬ АДМИНА -->
             <div id="admin-panel" class="hidden" style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 15px;">
                 <h3 style="text-align:center; font-size:16px; color: var(--gold);">Панель создателя</h3>
                 <input type="text" id="promo-code-input" placeholder="Название (напр. RIVO100)">
@@ -218,15 +213,6 @@
                             <div class="header-status" id="chat-status">В сети</div>
                         </div>
                     </div>
-                </div>
-                <div class="balance-badge">
-                    <svg class="coin-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <circle cx="12" cy="12" r="10" fill="url(#paint0_linear)"/>
-                        <circle cx="12" cy="12" r="8" stroke="#B45309" stroke-width="1.5"/>
-                        <path d="M9 16V8H12.5C14.433 8 16 9.119 16 11C16 12.881 14.433 14 12.5 14H11V16H9ZM11 12H12.5C13.3284 12 14 11.552 14 11C14 10.448 13.3284 10 12.5 10H11V12Z" fill="#78350F"/>
-                        <defs><linearGradient id="paint0_linear" x1="12" y1="2" x2="12" y2="22" gradientUnits="userSpaceOnUse"><stop stop-color="#FDE047"/><stop offset="1" stop-color="#EAB308"/></linearGradient></defs>
-                    </svg>
-                    <span id="coin-balance">0</span> R
                 </div>
             </div>
             <div id="messages"></div>
@@ -333,7 +319,6 @@
 
                     document.getElementById('login-overlay').classList.add('hidden');
                     document.getElementById('app').classList.remove('hidden');
-                    document.getElementById('coin-balance').innerText = myUser.coins;
                     
                     ws.send(JSON.stringify({ type: 'get_groups' })); 
                     ws.send(JSON.stringify({ type: 'get_chat_list' })); 
@@ -407,6 +392,15 @@
                     document.getElementById('profile-view-overlay').classList.remove('hidden');
                 }
                 
+                if (data.type === 'profile_saved') {
+                    // Обновляем локальные данные пользователя после сохранения
+                    myUser = data.user;
+                    selectedAvatarBase64 = myUser.avatar;
+                    document.getElementById('my-name').innerText = myUser.display_name; // Обновляем имя в шапке (если оно есть)
+                    alert('Профиль успешно обновлен!');
+                    document.getElementById('settings-overlay').classList.add('hidden');
+                }
+
                 if (data.type === 'action_success') {
                     if (data.action === 'block') {
                         alert('Пользователь заблокирован.');
@@ -434,14 +428,13 @@
 
                 if (data.type === 'update_coins') {
                     myUser.coins = data.coins;
-                    document.getElementById('coin-balance').innerText = data.coins;
                 }
                 if (data.type === 'group_created') {
                     ws.send(JSON.stringify({ type: 'get_groups' }));
                     document.getElementById('group-overlay').classList.add('hidden');
                 }
                 if (data.type === 'error') {
-                    alert(data.message); // Здесь выведется "Вы заблокированы..."
+                    alert(data.message);
                 }
             };
         }
@@ -493,10 +486,12 @@
             } else {
                 allUsers.filter(u => {
                     if (u.username === myUser.username) return false;
-                    const matchUsername = u.username ? u.username.toLowerCase().includes(query) : false;
-                    const matchId = u.six_digit_id ? u.six_digit_id.toString().includes(query) : false;
-                    const matchDisplayName = u.display_name ? u.display_name.toLowerCase().includes(query) : false;
-                    return matchUsername || matchId || matchDisplayName;
+                    // Делаем поиск более надежным (приводим всё к строкам)
+                    const uName = u.username ? u.username.toLowerCase() : '';
+                    const uId = u.six_digit_id ? u.six_digit_id.toString() : '';
+                    const uDisplay = u.display_name ? u.display_name.toLowerCase() : '';
+                    
+                    return uName.includes(query) || uId.includes(query) || uDisplay.includes(query);
                 }).forEach(u => {
                     const div = document.createElement('div');
                     div.className = 'chat-item';
@@ -512,7 +507,7 @@
                         <div class="avatar-box">${avatarHtml}<div class="status-dot ${dotClass}"></div></div>
                         <div class="chat-info">
                             <div class="chat-top"><span class="chat-name">${u.display_name || u.username}</span></div>
-                            <div class="chat-bottom"><span class="chat-msg">@${u.username}</span></div>
+                            <div class="chat-bottom"><span class="chat-msg">ID: ${u.six_digit_id}</span></div>
                         </div>`;
                     list.appendChild(div);
                 });
@@ -598,6 +593,7 @@
         }
 
         function saveProfile() {
+            // Отправляем запрос, но окно не закрываем, ждем ответа от сервера
             ws.send(JSON.stringify({
                 type: 'update_profile',
                 display_name: document.getElementById('settings-display-name').value.trim(),
@@ -606,7 +602,6 @@
                 avatar: selectedAvatarBase64,
                 status: 'online'
             }));
-            document.getElementById('settings-overlay').classList.add('hidden');
         }
 
         function openCreateGroup() {
@@ -636,7 +631,6 @@
             document.getElementById('shop-overlay').classList.add('hidden');
         }
         
-        // БЛОКИРОВКА / РАЗБЛОКИРОВКА
         function toggleBlock() {
             if (!viewingUser) return;
             if (currentUserBlocked) {
@@ -648,7 +642,6 @@
             }
         }
 
-        // УДАЛЕНИЕ ЧАТА
         function deleteChat() {
             if (!viewingUser) return;
             if(confirm('Удалить чат? История сообщений будет стерта.')) {
@@ -656,7 +649,6 @@
             }
         }
 
-        // ПРОМОКОДЫ
         function createPromo() {
             const code = document.getElementById('promo-code-input').value.trim();
             const reward = parseInt(document.getElementById('promo-reward-input').value);
