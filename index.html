@@ -14,7 +14,6 @@
         * { box-sizing: border-box; }
         body { margin: 0; padding: 0; background: var(--bg-main); color: var(--text-main); font-family: 'Inter', sans-serif; display: flex; height: 100vh; overflow: hidden; }
         
-        /* --- ОСНОВНОЙ ИНТЕРФЕЙС --- */
         #app { display: flex; width: 100%; height: 100%; }
 
         /* ЛЕВАЯ ПАНЕЛЬ */
@@ -32,12 +31,12 @@
         .avatar-box { width: 54px; height: 54px; border-radius: 50%; background: #202b36; display: flex; justify-content: center; align-items: center; font-size: 24px; position: relative; overflow: hidden; flex-shrink: 0; }
         .avatar-box img { width: 100%; height: 100%; object-fit: cover; }
         .status-dot { width: 14px; height: 14px; border-radius: 50%; position: absolute; bottom: 0; right: 0; border: 2px solid var(--bg-panel); }
+        .online { background-color: #31a24c; } .offline { background-color: #7f91a4; }
         
         .chat-info { flex: 1; overflow: hidden; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
         .chat-item:last-child .chat-info { border-bottom: none; }
         .chat-top { display: flex; justify-content: space-between; margin-bottom: 3px; }
         .chat-name { font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .chat-time { font-size: 12px; color: var(--text-muted); }
         .chat-bottom { display: flex; justify-content: space-between; align-items: center; }
         .chat-msg { font-size: 14px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
         .unread-badge { background: var(--accent); color: white; border-radius: 10px; padding: 2px 6px; font-size: 11px; font-weight: 600; }
@@ -49,7 +48,7 @@
         .header-info:hover .chat-name { color: var(--accent); }
         .header-name { font-weight: 600; font-size: 16px; }
         .header-status { font-size: 13px; color: var(--text-muted); }
-        .balance-badge { background: rgba(251, 191, 36, 0.15); border: 1px solid var(--gold); color: var(--gold); padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 14px; cursor: pointer; }
+        .balance-badge { background: rgba(251, 191, 36, 0.15); border: 1px solid var(--gold); color: var(--gold); padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 14px; }
 
         #messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
         .msg-bubble { max-width: 60%; padding: 10px 14px; border-radius: 12px; word-wrap: break-word; font-size: 15px; line-height: 1.4; position: relative; }
@@ -72,18 +71,12 @@
         .modal-box button:hover { background: var(--accent-hover); }
         .hidden { display: none !important; }
 
-        /* Профиль */
-        .profile-tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
-        .profile-tab { flex: 1; text-align: center; padding: 10px; cursor: pointer; color: var(--text-muted); font-weight: 600; }
-        .profile-tab.active { color: var(--accent); border-bottom: 2px solid var(--accent); }
-        
         .profile-avatar-big { width: 100px; height: 100px; border-radius: 50%; background: #202b36; margin: 0 auto 15px; display: flex; justify-content: center; align-items: center; font-size: 40px; overflow: hidden; }
         .profile-avatar-big img { width: 100%; height: 100%; object-fit: cover; }
         .profile-field { background: var(--bg-main); padding: 12px 15px; border-radius: 8px; margin-bottom: 10px; }
         .profile-label { font-size: 12px; color: var(--accent); margin-bottom: 4px; }
         .profile-value { font-size: 15px; color: white; }
 
-        /* Группы и подарки */
         .shop-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
         .shop-item { background: var(--bg-main); padding: 15px; border-radius: 10px; text-align: center; cursor: pointer; }
         .shop-item:hover { background: var(--bg-input); }
@@ -95,7 +88,6 @@
         .gift-text { background: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 15px; margin-top: 5px; display: inline-block; font-size: 13px; color: #fbbf24; }
         @keyframes pop { 0% { transform: scale(0); } 80% { transform: scale(1.1); } 100% { transform: scale(1); } }
 
-        /* МОБИЛЬНАЯ ВЕРСИЯ */
         #back-btn { display: none; cursor: pointer; font-size: 24px; color: var(--accent); margin-right: 10px; }
         @media (max-width: 768px) {
             #sidebar { width: 100%; border-right: none; }
@@ -108,7 +100,6 @@
 </head>
 <body>
 
-    <!-- ЭКРАН ВХОДА -->
     <div id="login-overlay" class="modal-overlay">
         <div class="modal-box">
             <h2>Rivo</h2>
@@ -120,7 +111,6 @@
         </div>
     </div>
 
-    <!-- ПРОСМОТР ПРОФИЛЯ (Как видят другие) -->
     <div id="profile-view-overlay" class="modal-overlay hidden">
         <div class="modal-box">
             <div class="profile-avatar-big" id="view-avatar"></div>
@@ -147,7 +137,6 @@
         </div>
     </div>
 
-    <!-- НАСТРОЙКИ (Свой профиль) -->
     <div id="settings-overlay" class="modal-overlay hidden">
         <div class="modal-box">
             <h2>Настройки</h2>
@@ -173,7 +162,6 @@
         </div>
     </div>
 
-    <!-- МАГАЗИН -->
     <div id="shop-overlay" class="modal-overlay hidden">
         <div class="modal-box">
             <h2>Подарки</h2>
@@ -182,19 +170,17 @@
         </div>
     </div>
 
-    <!-- СОЗДАНИЕ ГРУППЫ -->
     <div id="group-overlay" class="modal-overlay hidden">
         <div class="modal-box">
             <h2>Новая группа</h2>
             <input type="text" id="group-name" placeholder="Название группы">
-            <div style="font-size:12px; color:var(--text-muted); margin-bottom:5px;">Выберите участников из списка:</div>
+            <div style="font-size:12px; color:var(--text-muted); margin-bottom:5px;">Выберите участников:</div>
             <div id="group-members-list" style="max-height:150px; overflow-y:auto; margin-bottom:15px; border:1px solid var(--border); border-radius:8px;"></div>
             <button onclick="createGroup()">Создать</button>
             <button onclick="document.getElementById('group-overlay').classList.add('hidden')" style="background:transparent; border:1px solid var(--border);">Отмена</button>
         </div>
     </div>
 
-    <!-- ОСНОВНОЙ ИНТЕРФЕЙС -->
     <div id="app" class="hidden">
         <div id="sidebar">
             <div class="sidebar-header">
@@ -202,7 +188,7 @@
                 <div style="font-weight:bold; font-size:18px;">Rivo</div>
                 <div class="menu-btn" onclick="openCreateGroup()">➕</div>
             </div>
-            <input type="text" id="search-input" placeholder="Поиск..." oninput="renderChats()">
+            <input type="text" id="search-input" placeholder="Поиск (имя, @юзер или ID)..." oninput="renderChats()">
             <div id="chat-list"></div>
         </div>
 
@@ -235,8 +221,8 @@
         let ws, myUser = null, isLoginMode = true;
         let allUsers = []; 
         let myGroups = [];
-        let currentChatId = null; // username или 'group_123'
-        let currentChatType = null; // 'user' или 'group'
+        let currentChatId = null; 
+        let currentChatType = null; 
         let unreadMessages = {};
         
         let selectedAvatarBase64 = "";
@@ -246,7 +232,6 @@
             { emoji: '💎', price: 100 }, { emoji: '👑', price: 500 }
         ];
 
-        // ЗАГРУЗКА И СЖАТИЕ АВАТАРКИ
         function handleAvatarUpload(e) {
             const file = e.target.files[0];
             if(!file) return;
@@ -320,7 +305,7 @@
                     document.getElementById('app').classList.remove('hidden');
                     document.getElementById('coin-balance').innerText = myUser.coins;
                     
-                    ws.send(JSON.stringify({ type: 'get_groups' })); // Запрашиваем группы
+                    ws.send(JSON.stringify({ type: 'get_groups' })); 
                     setupAppLogic();
                 }
                 
@@ -392,13 +377,14 @@
             };
         }
 
-        function setupAppLogic() { /* Здесь можно добавить слушатели, если нужно */ }
+        function setupAppLogic() { }
 
-        // ОТРИСОВКА СПИСКА ЧАТОВ
+        // ОТРИСОВКА СПИСКА ЧАТОВ С ИСПРАВЛЕННЫМ ПОИСКОМ
         function renderChats() {
             const list = document.getElementById('chat-list');
             list.innerHTML = '';
-            const query = document.getElementById('search-input').value.toLowerCase();
+            // Берем текст из поиска, переводим в нижний регистр и убираем пробелы
+            const query = document.getElementById('search-input').value.toLowerCase().trim();
 
             // 1. Группы
             myGroups.filter(g => g.name.toLowerCase().includes(query)).forEach(g => {
@@ -414,13 +400,19 @@
                 list.appendChild(div);
             });
 
-            // 2. Личные чаты (показываем только тех, с кем есть история или друзей, чтобы не было "всех")
-            // Для простоты: показываем всех, но ты можешь скрыть лишних, настроив фильтр
-            allUsers.filter(u => u.username !== myUser.username && (u.username.toLowerCase().includes(query) || u.six_digit_id.includes(query))).forEach(u => {
-                // Показываем чат, если есть непрочитанные или это просто контакт
+            // 2. Личные чаты (Ищем по Юзернейму, Имени или 6-значному ID)
+            allUsers.filter(u => {
+                if (u.username === myUser.username) return false; // Скрываем себя
+                
+                const matchUsername = u.username ? u.username.toLowerCase().includes(query) : false;
+                const matchId = u.six_digit_id ? u.six_digit_id.toString().includes(query) : false;
+                const matchDisplayName = u.display_name ? u.display_name.toLowerCase().includes(query) : false;
+                
+                return matchUsername || matchId || matchDisplayName;
+            }).forEach(u => {
                 const div = document.createElement('div');
                 div.className = 'chat-item';
-                div.onclick = () => openChat(u.username, 'user', u.display_name, u.status);
+                div.onclick = () => openChat(u.username, 'user', u.display_name || u.username, u.status);
                 
                 const avatarHtml = u.avatar ? `<img src="${u.avatar}">` : '👤';
                 const dotClass = u.status === 'online' ? 'online' : 'offline';
@@ -444,7 +436,6 @@
             });
         }
 
-        // ОТКРЫТИЕ ЧАТА
         function openChat(id, type, name, status) {
             currentChatId = id;
             currentChatType = type;
@@ -457,7 +448,7 @@
             
             document.getElementById('message-input').disabled = false;
             document.getElementById('send-btn').disabled = false;
-            document.getElementById('gift-btn').disabled = (type === 'group'); // Подарки только в личку
+            document.getElementById('gift-btn').disabled = (type === 'group'); 
             
             unreadMessages[id] = 0;
             renderChats();
@@ -476,7 +467,6 @@
             }
         }
 
-        // ОТПРАВКА СООБЩЕНИЙ
         function sendMessage() {
             const input = document.getElementById('message-input');
             const text = input.value.trim();
@@ -511,7 +501,6 @@
             document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
         }
 
-        // ПРОФИЛЬ И НАСТРОЙКИ
         function openUserProfile(username) {
             if(!username || currentChatType === 'group') return;
             ws.send(JSON.stringify({ type: 'get_profile', target: username }));
@@ -538,7 +527,6 @@
             document.getElementById('settings-overlay').classList.add('hidden');
         }
 
-        // ГРУППЫ
         function openCreateGroup() {
             const list = document.getElementById('group-members-list');
             list.innerHTML = allUsers.filter(u => u.username !== myUser.username).map(u => `
@@ -557,7 +545,6 @@
             ws.send(JSON.stringify({ type: 'create_group', name: name, members: members }));
         }
 
-        // ПОДАРКИ
         function openShop() { if(currentChatId && currentChatType==='user') document.getElementById('shop-overlay').classList.remove('hidden'); }
         function buyGift(emoji, price) {
             const comment = prompt("Пожелание к подарку:", "Спасибо!");
