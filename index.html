@@ -27,37 +27,19 @@
             --danger: #ef4444;
         }
         
-        * { 
-            box-sizing: border-box; 
-        }
+        * { box-sizing: border-box; }
         
         body { 
-            margin: 0; 
-            padding: 0; 
-            background: var(--bg-main); 
-            color: var(--text-main); 
+            margin: 0; padding: 0; 
+            background: var(--bg-main); color: var(--text-main); 
             font-family: 'Inter', sans-serif; 
-            display: flex; 
-            height: 100vh; 
-            overflow: hidden; 
+            display: flex; height: 100vh; overflow: hidden; 
             overscroll-behavior-y: contain; 
         }
         
-        #app { 
-            display: flex; 
-            width: 100%; 
-            height: 100%; 
-        }
+        #app { display: flex; width: 100%; height: 100%; }
+        .coin-icon { vertical-align: middle; width: 16px; height: 16px; margin-right: 4px; margin-top: -2px; }
 
-        .coin-icon { 
-            vertical-align: middle; 
-            width: 16px; 
-            height: 16px; 
-            margin-right: 4px; 
-            margin-top: -2px; 
-        }
-
-        /* --- АНИМАЦИИ --- */
         @keyframes modalFadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes modalFadeOut { from { opacity: 1; } to { opacity: 0; } }
         @keyframes modalSlideUp { from { transform: translateY(40px) scale(0.95); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
@@ -67,582 +49,92 @@
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
         /* ЛЕВАЯ ПАНЕЛЬ */
-        #sidebar { 
-            width: 340px; 
-            background: var(--bg-panel); 
-            border-right: 1px solid var(--border); 
-            display: flex; 
-            flex-direction: column; 
-            z-index: 2; 
-            position: relative; 
-        }
-        
-        .sidebar-header { 
-            padding: 10px 15px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: space-between; 
-            background: var(--bg-panel); 
-        }
-        
-        .menu-btn { 
-            cursor: pointer; 
-            font-size: 20px; 
-            color: var(--text-muted); 
-            padding: 5px; 
-        }
-        
-        .header-balance { 
-            background: rgba(251, 191, 36, 0.15); 
-            border: 1px solid var(--gold); 
-            color: var(--gold); 
-            padding: 2px 8px; 
-            border-radius: 10px; 
-            font-size: 13px; 
-            font-weight: bold; 
-            display: flex; 
-            align-items: center; 
-        }
+        #sidebar { width: 340px; background: var(--bg-panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 2; position: relative; }
+        .sidebar-header { padding: 10px 15px; display: flex; align-items: center; justify-content: space-between; background: var(--bg-panel); }
+        .menu-btn { cursor: pointer; font-size: 20px; color: var(--text-muted); padding: 5px; }
+        .header-balance { background: rgba(251, 191, 36, 0.15); border: 1px solid var(--gold); color: var(--gold); padding: 2px 8px; border-radius: 10px; font-size: 13px; font-weight: bold; display: flex; align-items: center; }
+        .search-container { position: relative; margin: 5px 15px 15px; }
+        #search-input { width: 100%; padding: 10px 35px 10px 15px; border-radius: 20px; border: none; background: var(--bg-input); color: white; outline: none; font-size: 14px; }
+        #clear-search { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--text-muted); display: none; font-size: 18px; }
 
-        .search-container { 
-            position: relative; 
-            margin: 5px 15px 15px; 
-        }
-        
-        #search-input { 
-            width: 100%; 
-            padding: 10px 35px 10px 15px; 
-            border-radius: 20px; 
-            border: none; 
-            background: var(--bg-input); 
-            color: white; 
-            outline: none; 
-            font-size: 14px; 
-        }
-        
-        #clear-search { 
-            position: absolute; 
-            right: 10px; 
-            top: 50%; 
-            transform: translateY(-50%); 
-            cursor: pointer; 
-            color: var(--text-muted); 
-            display: none; 
-            font-size: 18px; 
-        }
+        #ptr-indicator { height: 0; overflow: hidden; text-align: center; color: var(--text-muted); transition: height 0.2s, padding 0.2s; font-size: 14px; display: flex; justify-content: center; align-items: center; }
+        .spinner { width: 20px; height: 20px; border: 2px solid var(--text-muted); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; display: none; }
 
-        /* PULL TO REFRESH */
-        #ptr-indicator { 
-            height: 0; 
-            overflow: hidden; 
-            text-align: center; 
-            color: var(--text-muted); 
-            transition: height 0.2s, padding 0.2s; 
-            font-size: 14px; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-        }
+        #chat-list { flex: 1; overflow-y: auto; }
+        .chat-item { padding: 10px 15px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: 0.1s; }
+        .chat-item:hover { background: var(--bg-input); }
         
-        .spinner { 
-            width: 20px; 
-            height: 20px; 
-            border: 2px solid var(--text-muted); 
-            border-top-color: var(--accent); 
-            border-radius: 50%; 
-            animation: spin 1s linear infinite; 
-            display: none; 
-        }
-
-        #chat-list { 
-            flex: 1; 
-            overflow-y: auto; 
-        }
+        .avatar-box { width: 54px; height: 54px; border-radius: 50%; background: #202b36; display: flex; justify-content: center; align-items: center; font-size: 24px; position: relative; overflow: hidden; flex-shrink: 0; }
+        .avatar-box img { width: 100%; height: 100%; object-fit: cover; }
+        .status-dot { width: 14px; height: 14px; border-radius: 50%; position: absolute; bottom: 0; right: 0; border: 2px solid var(--bg-panel); }
+        .online { background-color: var(--online); } .offline { background-color: var(--text-muted); }
         
-        .chat-item { 
-            padding: 10px 15px; 
-            display: flex; 
-            align-items: center; 
-            gap: 12px; 
-            cursor: pointer; 
-            transition: 0.1s; 
-        }
-        
-        .chat-item:hover { 
-            background: var(--bg-input); 
-        }
-        
-        .avatar-box { 
-            width: 54px; 
-            height: 54px; 
-            border-radius: 50%; 
-            background: #202b36; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            font-size: 24px; 
-            position: relative; 
-            overflow: hidden; 
-            flex-shrink: 0; 
-        }
-        
-        .avatar-box img { 
-            width: 100%; 
-            height: 100%; 
-            object-fit: cover; 
-        }
-        
-        .status-dot { 
-            width: 14px; 
-            height: 14px; 
-            border-radius: 50%; 
-            position: absolute; 
-            bottom: 0; 
-            right: 0; 
-            border: 2px solid var(--bg-panel); 
-        }
-        
-        .online { background-color: var(--online); } 
-        .offline { background-color: var(--text-muted); }
-        
-        .chat-info { 
-            flex: 1; 
-            overflow: hidden; 
-            border-bottom: 1px solid var(--border); 
-            padding-bottom: 10px; 
-        }
-        
-        .chat-item:last-child .chat-info { 
-            border-bottom: none; 
-        }
-        
-        .chat-top { 
-            display: flex; 
-            justify-content: space-between; 
-            margin-bottom: 3px; 
-        }
-        
-        .chat-name { 
-            font-weight: 600; 
-            font-size: 15px; 
-            white-space: nowrap; 
-            overflow: hidden; 
-            text-overflow: ellipsis; 
-        }
-        
-        .chat-bottom { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-        }
-        
-        .chat-msg { 
-            font-size: 14px; 
-            color: var(--text-muted); 
-            white-space: nowrap; 
-            overflow: hidden; 
-            text-overflow: ellipsis; 
-            max-width: 180px; 
-        }
-        
-        .unread-badge { 
-            background: var(--accent); 
-            color: white; 
-            border-radius: 10px; 
-            padding: 2px 6px; 
-            font-size: 11px; 
-            font-weight: 600; 
-        }
+        .chat-info { flex: 1; overflow: hidden; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+        .chat-item:last-child .chat-info { border-bottom: none; }
+        .chat-top { display: flex; justify-content: space-between; margin-bottom: 3px; }
+        .chat-name { font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .chat-bottom { display: flex; justify-content: space-between; align-items: center; }
+        .chat-msg { font-size: 14px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
+        .unread-badge { background: var(--accent); color: white; border-radius: 10px; padding: 2px 6px; font-size: 11px; font-weight: 600; }
 
         /* ПРАВАЯ ПАНЕЛЬ (ЧАТ) */
-        #chat-area { 
-            flex: 1; 
-            display: flex; 
-            flex-direction: column; 
-            background: #0e1621 url('https://web.telegram.org/img/tg_bg_pattern.png') repeat; 
-            position: relative; 
-        }
-        
-        #chat-header { 
-            padding: 10px 20px; 
-            border-bottom: 1px solid var(--border); 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            background: var(--bg-panel); 
-            z-index: 1;
-        }
-        
-        .header-info { 
-            display: flex; 
-            align-items: center; 
-            gap: 15px; 
-            cursor: pointer; 
-        }
-        
-        .header-info:hover .chat-name { 
-            color: var(--accent); 
-        }
-        
-        .header-name { 
-            font-weight: 600; 
-            font-size: 16px; 
-        }
-        
-        .header-status { 
-            font-size: 13px; 
-            color: var(--text-muted); 
-        }
+        #chat-area { flex: 1; display: flex; flex-direction: column; background: #0e1621 url('https://web.telegram.org/img/tg_bg_pattern.png') repeat; position: relative; }
+        #chat-header { padding: 10px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: var(--bg-panel); z-index: 1;}
+        .header-info { display: flex; align-items: center; gap: 15px; cursor: pointer; }
+        .header-name { font-weight: 600; font-size: 16px; }
+        .header-status { font-size: 13px; color: var(--text-muted); }
 
-        #messages { 
-            flex: 1; 
-            padding: 20px; 
-            overflow-y: auto; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 8px; 
-        }
-        
-        .msg-bubble { 
-            max-width: 60%; 
-            padding: 10px 14px; 
-            border-radius: 12px; 
-            word-wrap: break-word; 
-            font-size: 15px; 
-            line-height: 1.4; 
-            position: relative; 
-            animation: modalFadeIn 0.3s ease forwards;
-        }
-        
-        .my-msg { 
-            background: #2b5278; 
-            align-self: flex-end; 
-            border-bottom-right-radius: 4px; 
-        }
-        
-        .their-msg { 
-            background: #182533; 
-            align-self: flex-start; 
-            border-bottom-left-radius: 4px; 
-        }
-        
-        .sender-name { 
-            font-size: 12px; 
-            font-weight: 600; 
-            color: var(--accent); 
-            margin-bottom: 3px; 
-        }
-        
-        .msg-time { 
-            font-size: 11px; 
-            color: rgba(255,255,255,0.4); 
-            float: right; 
-            margin: 5px 0 0 10px; 
-        }
+        #messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+        .msg-bubble { max-width: 60%; padding: 10px 14px; border-radius: 12px; word-wrap: break-word; font-size: 15px; line-height: 1.4; position: relative; animation: modalFadeIn 0.3s ease forwards; }
+        .my-msg { background: #2b5278; align-self: flex-end; border-bottom-right-radius: 4px; }
+        .their-msg { background: #182533; align-self: flex-start; border-bottom-left-radius: 4px; }
+        .sender-name { font-size: 12px; font-weight: 600; color: var(--accent); margin-bottom: 3px; }
+        .msg-time { font-size: 11px; color: rgba(255,255,255,0.4); float: right; margin: 5px 0 0 10px; }
 
-        #input-area { 
-            padding: 10px 20px; 
-            display: flex; 
-            gap: 10px; 
-            background: var(--bg-panel); 
-            align-items: center; 
-            z-index: 1;
-        }
-        
-        #message-input { 
-            flex: 1; 
-            padding: 12px 15px; 
-            border-radius: 20px; 
-            border: none; 
-            background: var(--bg-input); 
-            color: white; 
-            outline: none; 
-            font-size: 15px; 
-        }
-        
-        .action-btn { 
-            background: none; 
-            border: none; 
-            color: var(--text-muted); 
-            font-size: 24px; 
-            cursor: pointer; 
-            padding: 5px; 
-        }
+        #input-area { padding: 10px 20px; display: flex; gap: 10px; background: var(--bg-panel); align-items: center; z-index: 1;}
+        #message-input { flex: 1; padding: 12px 15px; border-radius: 20px; border: none; background: var(--bg-input); color: white; outline: none; font-size: 15px; }
+        .action-btn { background: none; border: none; color: var(--text-muted); font-size: 24px; cursor: pointer; padding: 5px; }
 
         /* МОДАЛКИ */
-        .modal-overlay { 
-            position: fixed; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            height: 100%; 
-            background: rgba(0,0,0,0.8); 
-            backdrop-filter: blur(5px); 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            z-index: 100; 
-            animation: modalFadeIn 0.3s; 
-        }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; z-index: 100; animation: modalFadeIn 0.3s; }
+        .modal-overlay.animate-out { animation: modalFadeOut 0.25s forwards; }
+        .modal-box { background: var(--bg-panel); border-radius: 16px; width: 420px; max-height: 90vh; overflow-y: auto; padding: 20px; animation: modalSlideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; }
+        .modal-overlay.animate-out .modal-box { animation: modalSlideDown 0.25s forwards; }
         
-        .modal-overlay.animate-out { 
-            animation: modalFadeOut 0.25s forwards; 
-        }
-        
-        .modal-box { 
-            background: var(--bg-panel); 
-            border-radius: 16px; 
-            width: 420px; 
-            max-height: 90vh; 
-            overflow-y: auto; 
-            padding: 20px; 
-            animation: modalSlideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-            position: relative; 
-        }
-        
-        .modal-overlay.animate-out .modal-box { 
-            animation: modalSlideDown 0.25s forwards; 
-        }
-        
-        .modal-box h2 { 
-            margin-top: 0; 
-            text-align: center; 
-            font-size: 22px; 
-        }
-        
-        .modal-box input, .modal-box select { 
-            width: 100%; 
-            padding: 12px; 
-            margin-bottom: 15px; 
-            border-radius: 8px; 
-            border: 1px solid var(--border); 
-            background: var(--bg-main); 
-            color: white; 
-            outline: none; 
-            font-size: 15px; 
-        }
-        
-        .modal-box button { 
-            width: 100%; 
-            padding: 12px; 
-            border-radius: 8px; 
-            border: none; 
-            background: var(--accent); 
-            color: white; 
-            font-weight: 600; 
-            cursor: pointer; 
-            margin-bottom: 10px; 
-            transition: 0.2s;
-        }
-        
-        .modal-box button:hover { 
-            background: var(--accent-hover); 
-        }
-        
-        .hidden { 
-            display: none !important; 
-        }
+        .modal-box h2 { margin-top: 0; text-align: center; font-size: 22px; }
+        .modal-box input { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-main); color: white; outline: none; font-size: 15px; }
+        .modal-box button { width: 100%; padding: 12px; border-radius: 8px; border: none; background: var(--accent); color: white; font-weight: 600; cursor: pointer; margin-bottom: 10px; }
+        .hidden { display: none !important; }
 
         /* ПРОФИЛЬ */
-        .profile-header { 
-            background: linear-gradient(135deg, #1e293b, #0f172a); 
-            border-radius: 16px; 
-            padding: 20px; 
-            text-align: center; 
-            position: relative; 
-            overflow: hidden; 
-            margin-bottom: 15px; 
-            border: 1px solid var(--border); 
-        }
-        
-        .profile-header::before { 
-            content: ''; 
-            position: absolute; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            height: 100px; 
-            background: linear-gradient(90deg, #5eb5f7, #7c3aed, #db2777); 
-            opacity: 0.3; 
-            z-index: 0; 
-        }
-        
-        .profile-avatar-big { 
-            width: 90px; 
-            height: 90px; 
-            border-radius: 50%; 
-            background: #202b36; 
-            margin: 0 auto 10px; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            font-size: 40px; 
-            overflow: hidden; 
-            position: relative; 
-            z-index: 1; 
-            border: 3px solid var(--bg-panel); 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5); 
-        }
-        
-        .profile-avatar-big img { 
-            width: 100%; 
-            height: 100%; 
-            object-fit: cover; 
-        }
-        
-        .badges { 
-            display: flex; 
-            justify-content: center; 
-            gap: 5px; 
-            margin-bottom: 10px; 
-            z-index: 1; 
-            position: relative; 
-        }
-        
-        .badge { 
-            width: 24px; 
-            height: 24px; 
-            border-radius: 50%; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            font-size: 12px; 
-            color: white; 
-        }
-
-        .profile-balance { 
-            background: rgba(251, 191, 36, 0.1); 
-            border: 1px solid var(--gold); 
-            padding: 12px 15px; 
-            border-radius: 10px; 
-            margin-bottom: 10px; 
-            display: flex; 
-            justify-content: space-between; 
-            font-weight: bold; 
-            color: var(--gold); 
-        }
+        .profile-header { background: linear-gradient(135deg, #1e293b, #0f172a); border-radius: 16px; padding: 20px; text-align: center; position: relative; overflow: hidden; margin-bottom: 15px; border: 1px solid var(--border); }
+        .profile-header::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100px; background: linear-gradient(90deg, #5eb5f7, #7c3aed, #db2777); opacity: 0.3; z-index: 0; }
+        .profile-avatar-big { width: 90px; height: 90px; border-radius: 50%; background: #202b36; margin: 0 auto 10px; display: flex; justify-content: center; align-items: center; font-size: 40px; overflow: hidden; position: relative; z-index: 1; border: 3px solid var(--bg-panel); box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .profile-avatar-big img { width: 100%; height: 100%; object-fit: cover; }
+        .badges { display: flex; justify-content: center; gap: 5px; margin-bottom: 10px; z-index: 1; position: relative; }
+        .badge { width: 24px; height: 24px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 12px; color: white; }
+        .profile-balance { background: rgba(251, 191, 36, 0.1); border: 1px solid var(--gold); padding: 12px 15px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; font-weight: bold; color: var(--gold); }
 
         /* NFT СЕТКА */
-        .nft-grid { 
-            display: grid; 
-            grid-template-columns: repeat(3, 1fr); 
-            gap: 10px; 
-            margin-top: 15px; 
-        }
-        
-        .nft-card { 
-            background: rgba(0,0,0,0.4); 
-            border-radius: 12px; 
-            padding: 10px; 
-            text-align: center; 
-            border: 1px solid rgba(255,255,255,0.1); 
-            position: relative; 
-            overflow: hidden; 
-            transition: 0.2s; 
-            cursor: pointer; 
-        }
-        
-        .nft-card:hover { 
-            transform: translateY(-3px); 
-            border-color: var(--gold); 
-        }
-        
-        .nft-bg { 
-            position: absolute; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            height: 100%; 
-            opacity: 0.3; 
-            z-index: 0; 
-        }
-        
-        .nft-card svg { 
-            width: 50px; 
-            height: 50px; 
-            position: relative; 
-            z-index: 1; 
-            filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5)); 
-        }
-        
-        .nft-info { 
-            position: relative; 
-            z-index: 1; 
-            margin-top: 5px; 
-        }
-        
-        .nft-rarity { 
-            font-size: 9px; 
-            font-weight: bold; 
-            text-transform: uppercase; 
-        }
-        
-        .nft-num { 
-            font-size: 10px; 
-            color: white; 
-        }
+        .nft-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; }
+        .nft-card { background: rgba(0,0,0,0.4); border-radius: 12px; padding: 10px; text-align: center; border: 1px solid rgba(255,255,255,0.1); position: relative; overflow: hidden; transition: 0.2s; cursor: pointer; }
+        .nft-card:hover { transform: translateY(-3px); border-color: var(--gold); }
+        .nft-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.3; z-index: 0; }
+        .nft-card svg { width: 50px; height: 50px; position: relative; z-index: 1; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5)); }
+        .nft-info { position: relative; z-index: 1; margin-top: 5px; }
+        .nft-rarity { font-size: 9px; font-weight: bold; text-transform: uppercase; }
+        .nft-num { font-size: 10px; color: white; }
 
-        /* МАГАЗИН (РУЛЕТКА) */
-        .roulette-container { 
-            width: 100%; 
-            height: 100px; 
-            background: var(--bg-main); 
-            border-radius: 10px; 
-            overflow: hidden; 
-            position: relative; 
-            border: 2px solid var(--gold); 
-            display: flex; 
-            align-items: center; 
-            margin-bottom: 20px; 
-        }
-        
-        .roulette-strip { 
-            display: flex; 
-            height: 100%; 
-            transition: transform 3s cubic-bezier(0.1, 0.7, 0.1, 1); 
-        }
-        
-        .roulette-item { 
-            width: 100px; 
-            flex-shrink: 0; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            border-right: 1px solid rgba(255,255,255,0.1); 
-        }
-        
-        .roulette-item svg { 
-            width: 40px; 
-            height: 40px; 
-        }
-        
-        .roulette-line { 
-            position: absolute; 
-            left: 50%; 
-            top: 0; 
-            width: 2px; 
-            height: 100%; 
-            background: red; 
-            z-index: 10; 
-            transform: translateX(-50%); 
-            box-shadow: 0 0 10px red; 
-        }
+        /* РУЛЕТКА */
+        .roulette-container { width: 100%; height: 100px; background: var(--bg-main); border-radius: 10px; overflow: hidden; position: relative; border: 2px solid var(--gold); display: flex; align-items: center; margin-bottom: 20px; }
+        .roulette-strip { display: flex; height: 100%; transition: transform 3s cubic-bezier(0.1, 0.7, 0.1, 1); }
+        .roulette-item { width: 100px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; border-right: 1px solid rgba(255,255,255,0.1); }
+        .roulette-item svg { width: 40px; height: 40px; }
+        .roulette-line { position: absolute; left: 50%; top: 0; width: 2px; height: 100%; background: red; z-index: 10; transform: translateX(-50%); box-shadow: 0 0 10px red; }
 
-        .admin-btn { 
-            background: linear-gradient(135deg, #fbbf24, #f59e0b) !important; 
-            color: #000 !important; 
-            font-weight: bold; 
-        }
+        .admin-btn { background: linear-gradient(135deg, #fbbf24, #f59e0b) !important; color: #000 !important; font-weight: bold; }
 
-        #back-btn { 
-            display: none; 
-            cursor: pointer; 
-            font-size: 24px; 
-            color: var(--accent); 
-            margin-right: 10px; 
-        }
-        
+        #back-btn { display: none; cursor: pointer; font-size: 24px; color: var(--accent); margin-right: 10px; }
         @media (max-width: 768px) {
             #sidebar { width: 100%; }
             #chat-area { display: none; width: 100%; position: absolute; height: 100%; z-index: 10; }
@@ -928,7 +420,7 @@
                 ptrSpinner.style.display = 'block';
                 ptrIndicator.style.height = '60px';
                 
-                if(ws) {
+                if(ws && ws.readyState === WebSocket.OPEN) {
                     ws.send(JSON.stringify({ type: 'get_chat_list' }));
                     ws.send(JSON.stringify({ type: 'get_groups' }));
                 }
@@ -1417,18 +909,29 @@
         }
 
         function openMyProfile() {
+            if (!myUser) return alert('Ошибка: вы не авторизованы. Обновите страницу.');
+            if (!ws || ws.readyState !== WebSocket.OPEN) return alert('Соединение с сервером потеряно. Подождите или обновите страницу.');
             ws.send(JSON.stringify({ type: 'get_profile', target: myUser.username }));
         }
 
         function openSettings() {
+            if (!myUser) return alert('Вы не авторизованы.');
             closeModal('profile-view-overlay'); 
-            document.getElementById('settings-display-name').value = myUser.display_name;
-            document.getElementById('settings-six-id').value = myUser.six_digit_id;
-            document.getElementById('settings-bio').value = myUser.bio;
+            document.getElementById('settings-display-name').value = myUser.display_name || '';
+            document.getElementById('settings-six-id').value = myUser.six_digit_id || '';
+            document.getElementById('settings-bio').value = myUser.bio || '';
             document.getElementById('settings-avatar-preview').innerHTML = myUser.avatar ? `<img src="${myUser.avatar}">` : '👤';
-            selectedAvatarBase64 = myUser.avatar;
+            selectedAvatarBase64 = myUser.avatar || '';
             updateBalanceUI(); 
             document.getElementById('redeem-msg').innerText = ''; 
+            
+            // Проверка на админа для панели создателя
+            if (myUser.username === 'revezzz') {
+                document.getElementById('admin-panel').classList.remove('hidden');
+            } else {
+                document.getElementById('admin-panel').classList.add('hidden');
+            }
+            
             document.getElementById('settings-overlay').classList.remove('hidden');
         }
 
@@ -1462,6 +965,7 @@
         }
 
         function openMarket() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) return alert('Соединение с сервером потеряно.');
             ws.send(JSON.stringify({ type: 'get_marketplace' }));
             document.getElementById('market-overlay').classList.remove('hidden');
         }
