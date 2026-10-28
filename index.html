@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Rivo</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes bubblePop { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+        /* --- АНИМАЦИИ ДЛЯ ПОДАРКОВ (КАК В ТГ) --- */
+        @keyframes giftPop {
+            0% { transform: scale(0); opacity: 0; }
+            80% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes giftFloat {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-15px) rotate(5deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
+        }
+        @keyframes glowPulse {
+            0% { filter: drop-shadow(0 0 10px rgba(236, 72, 153, 0.6)); }
+            50% { filter: drop-shadow(0 0 30px rgba(236, 72, 153, 1)); }
+            100% { filter: drop-shadow(0 0 10px rgba(236, 72, 153, 0.6)); }
+        }
+
+        :root {
+            --bg-main: #0b0f19; --bg-panel: rgba(17, 24, 39, 0.7); --bg-input: rgba(31, 41, 55, 0.6);
+            --accent: #6366f1; --accent-hover: #4f46e5; --text-main: #f3f4f6; --text-muted: #9ca3af;
+            --border: rgba(255, 255, 255, 0.08); --gold: #fbbf24; --online: #10b981;
+        }
+        * { box-sizing: border-box; }
+        body { margin: 0; padding: 0; background: var(--bg-main); color: var(--text-main); font-family: 'Inter', sans-serif; display: flex; height: 100vh; overflow: hidden; background-image: radial-gradient(circle at 50% 0%, #1e1b4b 0%, transparent 50%); }
+        
+        #sidebar { width: 340px; background: var(--bg-panel); backdrop-filter: blur(20px); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 2; }
+        #my-profile { padding: 15px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 15px; cursor: pointer; transition: 0.2s; }
+        #my-profile:hover { background: rgba(255,255,255,0.03); }
+        
+        .avatar-wrapper { position: relative; width: 50px; height: 50px; flex-shrink: 0; }
+        .avatar { width: 100%; height: 100%; border-radius: 50%; background: #1f2937; display: flex; justify-content: center; align-items: center; font-size: 24px; border: 1px solid var(--border); }
+        .status-dot { width: 14px; height: 14px; border-radius: 50%; position: absolute; bottom: 0; right: 0; border: 2px solid var(--bg-main); }
+        .online { background-color: #10b981; } .idle { background-color: #f59e0b; } .dnd { background-color: #ef4444; } .offline { background-color: #6b7280; }
+
+        #search-input { margin: 15px; padding: 12px 16px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-input); color: white; outline: none; }
+        #user-list { flex: 1; overflow-y: auto; padding: 0 10px; }
+        .user-item { padding: 12px 15px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; gap: 15px; transition: 0.2s; margin-bottom: 5px; }
+        .user-item:hover { background: rgba(255,255,255,0.05); }
+        .unread-badge { background: var(--accent); color: white; border-radius: 20px; padding: 2px 8px; font-size: 12px; font-weight: 600; margin-left: auto; }
+
+        #chat-area { flex: 1; display: flex; flex-direction: column; position: relative; }
+        #chat-header { padding: 20px 30px; border-bottom: 1px solid var(--border); font-size: 20px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; background: var(--bg-panel); backdrop-filter: blur(20px); z-index: 1;}
+        
+        .chat-title { cursor: pointer; display: flex; align-items: center; gap: 10px; transition: 0.2s; padding: 5px 10px; border-radius: 8px; }
+        .chat-title:hover { background: rgba(255,255,255,0.05); }
+
+        .balance-badge { background: rgba(251, 191, 36, 0.15); border: 1px solid var(--gold); color: var(--gold); padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 14px; display: flex; align-items: center; gap: 5px; cursor: pointer; transition: 0.2s; }
+        .balance-badge:hover { background: rgba(251, 191, 36, 0.25); }
+
+        #messages { flex: 1; padding: 30px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; z-index: 0; }
+        .message { max-width: 60%; padding: 14px 18px; border-radius: 18px; word-wrap: break-word; animation: bubblePop 0.2s ease forwards; font-size: 15px; line-height: 1.4; }
+        .my-message { background: var(--accent); align-self: flex-end; border-bottom-right-radius: 4px; }
+        .their-message { background: var(--bg-input); border: 1px solid var(--border); align-self: flex-start; border-bottom-left-radius: 4px; }
+
+        /* --- СТИЛИ ДЛЯ ПОДАРКА В ЦЕНТРЕ --- */
+        .gift-event {
+            align-self: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px 0;
+            animation: giftPop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        .gift-icon-box {
+            font-size: 80px;
+            animation: giftFloat 3s ease-in-out infinite, glowPulse 2s infinite;
+            line-height: 1;
+        }
+        .gift-info-box {
+            background: linear-gradient(135deg, rgba(236, 72, 153, 0.2), rgba(139, 92, 246, 0.2));
+            border: 1px solid rgba(236, 72, 153, 0.5);
+            border-radius: 20px;
+            padding: 10px 20px;
+            margin-top: 10px;
+            text-align: center;
+            max-width: 280px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .gift-sender-name {
+            font-size: 13px;
+            color: #f472b6;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .gift-wish-text {
+            font-size: 15px;
+            color: white;
+            font-style: italic;
+        }
+        
+        #input-area { padding: 20px 30px; display: flex; gap: 12px; background: var(--bg-panel); backdrop-filter: blur(20px); border-top: 1px solid var(--border); z-index: 1;}
+        #message-input { flex: 1; padding: 15px 20px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-input); color: white; outline: none; }
+        
+        .btn { padding: 0 20px; border-radius: 12px; border: none; color: white; cursor: pointer; font-weight: 600; transition: 0.2s; display: flex; align-items: center; justify-content: center;}
+        .btn:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.1); }
+        #send-btn { background: var(--accent); } #gift-btn { background: linear-gradient(135deg, #ec4899, #8b5cf6); font-size: 20px; padding: 0 15px; }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; z-index: 100; animation: fadeIn 0.2s; }
+        .modal-box { background: #111827; padding: 30px; border-radius: 20px; border: 1px solid var(--border); width: 400px; max-height: 90vh; overflow-y: auto; animation: slideUp 0.3s; }
+        .modal-box h2 { color: white; margin-top: 0; text-align: center; }
+        .modal-box label { display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 8px; margin-top: 15px;}
+        .modal-box input, .modal-box select { padding: 12px; margin-bottom: 10px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-main); color: white; width: 100%; outline: none; }
+        .modal-box button { padding: 15px; width: 100%; border-radius: 10px; border: none; background: var(--accent); color: white; cursor: pointer; font-weight: 600; margin-top: 15px;}
+        .hidden { display: none !important; }
+        
+        .avatar-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+        .avatar-option { font-size: 24px; text-align: center; padding: 10px; border-radius: 10px; background: var(--bg-main); cursor: pointer; border: 2px solid transparent; transition: 0.2s; user-select: none;}
+        .avatar-option:hover { background: rgba(255,255,255,0.1); }
+        .avatar-option.selected { border-color: var(--accent); background: rgba(99, 102, 241, 0.2); }
+
+        .shop-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; }
+        .shop-item { background: var(--bg-main); border: 1px solid var(--border); border-radius: 12px; padding: 15px; text-align: center; cursor: pointer; transition: 0.2s; }
+        .shop-item:hover { border-color: #ec4899; background: rgba(236, 72, 153, 0.1); }
+        .shop-emoji { font-size: 30px; display: block; margin-bottom: 5px; }
+        .shop-price { color: var(--gold); font-weight: bold; font-size: 12px; }
+
+        /* ПРОФИЛЬ */
+        .profile-card { background: #18212f; border-radius: 20px; overflow: hidden; border: 1px solid var(--border); }
+        .profile-cover { height: 100px; background: linear-gradient(135deg, #4f46e5, #7c3aed); width: 100%; }
+        .profile-body { padding: 0 20px 20px; position: relative; text-align: center; }
+        .profile-big-avatar { width: 90px; height: 90px; border-radius: 50%; background: var(--bg-main); border: 4px solid #18212f; display: flex; justify-content: center; align-items: center; font-size: 45px; margin: -45px auto 10px; position: relative; z-index: 2; }
+        .profile-status { color: var(--online); font-size: 13px; margin-bottom: 20px; display: flex; justify-content: center; align-items: center; gap: 5px;}
+        
+        .profile-info-row { background: rgba(0,0,0,0.2); border-radius: 12px; padding: 12px 15px; text-align: left; margin-bottom: 10px; }
+        /* СВАПНУЛИ МЕСТАМИ: Сначала текст, потом значение */
+        .profile-info-title { color: var(--text-muted); font-size: 12px; font-weight: 500; margin-bottom: 4px; }
+        .profile-info-value { color: var(--accent); font-size: 16px; font-weight: 600; }
+        
+        .profile-gifts-title { text-align: left; font-size: 15px; font-weight: 600; margin-top: 20px; margin-bottom: 10px; color: var(--text-muted);}
+        .gift-list { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-start; }
+        .profile-gift-item { background: var(--bg-main); border: 1px solid var(--border); border-radius: 12px; padding: 10px; text-align: center; width: 80px; }
+        .profile-gift-emoji { font-size: 30px; }
+        .profile-gift-sender { font-size: 10px; color: var(--text-muted); margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            #sidebar { width: 100%; height: 40vh; }
+            #chat-area { height: 60vh; }
+            .modal-box { width: 95%; padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="login-overlay" class="modal-overlay">
+        <div class="modal-box">
+            <h2>Rivo <span style="font-size:12px; color:var(--accent);">v7.0</span></h2>
+            <input type="text" id="auth-username" placeholder="Юзернейм (для входа)">
+            <input type="password" id="auth-password" placeholder="Пароль">
+            <button id="main-auth-btn" onclick="submitAuth()">Войти</button>
+            <div style="text-align:center; margin-top:15px; color:var(--accent); cursor:pointer;" id="switch-text" onclick="toggleAuthMode()">Нет аккаунта? Зарегистрироваться</div>
+            <div id="auth-error" style="color: #ef4444; margin-top: 10px; text-align: center;"></div>
+        </div>
+    </div>
+
+    <!-- НАСТРОЙКИ -->
+    <div id="settings-overlay" class="modal-overlay hidden">
+        <div class="modal-box">
+            <h2>Настройки</h2>
+            
+            <label>Имя (отображается)</label>
+            <input type="text" id="settings-display-name" placeholder="Ваше имя...">
+
+            <label>Ваш 6-значный ID</label>
+            <input type="text" id="settings-six-id" placeholder="123456" maxlength="6">
+
+            <label>Аватар</label>
+            <div class="avatar-grid" id="avatar-picker"></div>
+            
+            <label>Статус</label>
+            <select id="settings-status">
+                <option value="online">🟢 В сети</option>
+                <option value="idle">🟡 Отошел</option>
+                <option value="dnd">🔴 Не беспокоить</option>
+                <option value="offline">⚫ Невидимка</option>
+            </select>
+            
+            <label>О себе</label>
+            <input type="text" id="settings-bio" placeholder="Био...">
+            <button onclick="saveProfile()">Сохранить</button>
+            
+            <div id="admin-panel" class="hidden" style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 15px;">
+                <h3 style="text-align:center; font-size:16px; color: var(--gold);">Панель создателя</h3>
+                <input type="text" id="promo-code-input" placeholder="Название (напр. RIVO100)">
+                <input type="number" id="promo-reward-input" placeholder="Награда (коины)" value="50">
+                <button onclick="createPromo()" style="background: var(--gold); color: black;">Создать промокод</button>
+                <div id="promo-admin-msg" style="text-align:center; font-size:12px; margin-top:10px;"></div>
+            </div>
+
+            <div style="text-align:center; margin-top:15px; color:var(--accent); cursor:pointer;" onclick="document.getElementById('settings-overlay').classList.add('hidden')">Закрыть</div>
+        </div>
+    </div>
+
+    <!-- ПРОСМОТР ПРОФИЛЯ -->
+    <div id="profile-overlay" class="modal-overlay hidden">
+        <div class="modal-box" style="padding: 0; background: transparent; border: none; width: 360px;">
+            <div class="profile-card">
+                <div class="profile-cover"></div>
+                <div class="profile-body">
+                    <div class="profile-big-avatar" id="profile-avatar">👤</div>
+                    <div class="profile-status" id="profile-status-text">
+                        <span style="font-size:16px;">✓</span> в сети
+                    </div>
+                    
+                    <div class="profile-info-row">
+                        <div class="profile-info-title">ID пользователя</div>
+                        <div class="profile-info-value" id="profile-six-id">123456</div>
+                    </div>
+                    
+                    <div class="profile-info-row">
+                        <div class="profile-info-title">Имя пользователя</div>
+                        <div class="profile-info-value" id="profile-username">@username</div>
+                    </div>
+
+                    <div class="profile-info-row">
+                        <div class="profile-info-title">О себе</div>
+                        <div class="profile-info-value" id="profile-bio" style="font-size:14px; color:white;">Био</div>
+                    </div>
+
+                    <div class="profile-gifts-title">Подарки <span id="gifts-count" style="color:var(--accent);"></span></div>
+                    <div class="gift-list" id="profile-gifts"></div>
+                    
+                    <button onclick="document.getElementById('profile-overlay').classList.add('hidden')" style="margin-top: 20px; background: var(--bg-input);">Закрыть</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ПРОМОКОД -->
+    <div id="promo-overlay" class="modal-overlay hidden">
+        <div class="modal-box">
+            <h2>Промокод</h2>
+            <p style="text-align:center; color:var(--text-muted);">Введите код, чтобы получить R-коины</p>
+            <input type="text" id="redeem-input" placeholder="Ваш код..." style="text-transform: uppercase;">
+            <button onclick="redeemPromo()">Активировать</button>
+            <div id="promo-user-msg" style="text-align:center; margin-top:10px; font-weight:bold;"></div>
+            <div style="text-align:center; margin-top:15px; color:var(--accent); cursor:pointer;" onclick="document.getElementById('promo-overlay').classList.add('hidden')">Закрыть</div>
+        </div>
+    </div>
+
+    <!-- МАГАЗИН -->
+    <div id="shop-overlay" class="modal-overlay hidden">
+        <div class="modal-box">
+            <h2>Магазин подарков</h2>
+            <div class="shop-grid" id="shop-grid"></div>
+            <div style="text-align:center; margin-top:15px; color:var(--accent); cursor:pointer;" onclick="document.getElementById('shop-overlay').classList.add('hidden')">Отмена</div>
+        </div>
+    </div>
+
+    <div id="app" class="hidden" style="display: flex; width: 100%; height: 100%;">
+        <div id="sidebar">
+            <div id="my-profile" onclick="openSettings()">
+                <div class="avatar-wrapper">
+                    <div class="avatar" id="my-avatar">👤</div>
+                    <div class="status-dot online" id="my-status-dot"></div>
+                </div>
+                <div style="overflow: hidden;">
+                    <div id="my-name" style="font-weight: 600;"></div>
+                    <div id="my-bio" style="font-size: 13px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"></div>
+                </div>
+            </div>
+            <input type="text" id="search-input" placeholder="Поиск (имя, @юзер или 6 цифр)...">
+            <div id="user-list"></div>
+        </div>
+
+        <div id="chat-area">
+            <div id="chat-header">
+                <div class="chat-title" id="chat-title-area" onclick="openUserProfile()">
+                    <span id="chat-with">Выберите собеседника</span>
+                </div>
+                <div class="balance-badge" onclick="document.getElementById('promo-overlay').classList.remove('hidden')">
+                    🪙 <span id="coin-balance">0</span> R
+                </div>
+            </div>
+            <div id="messages"></div>
+            <div id="input-area">
+                <button id="gift-btn" class="btn" onclick="openShop()" disabled>🎁</button>
+                <input type="text" id="message-input" placeholder="Сообщение..." disabled>
+                <button id="send-btn" class="btn" onclick="sendMessage()" disabled>Отправить</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let ws, myName = "", isLoginMode = true, currentChatWith = null, allUsers = [], unreadMessages = {};
+        let selectedAvatar = "👤";
+        const availableAvatars = ["👤", "😎", "👽", "🤖", "🐱", "🐶", "🦊", "🐼", "🦁", "🐸", "🍕", "🚀", "🎮", "🎧", "💎"];
+        const gifts = [
+            { emoji: '🎂', price: 10 }, { emoji: '❤️', price: 15 }, { emoji: '🌹', price: 20 },
+            { emoji: '🧸', price: 30 }, { emoji: '🍕', price: 40 }, { emoji: '🏆', price: 50 },
+            { emoji: '💎', price: 100 }, { emoji: '👑', price: 500 }
+        ];
+
+        window.onload = function() {
+            const picker = document.getElementById('avatar-picker');
+            availableAvatars.forEach(emoji => {
+                const div = document.createElement('div');
+                div.className = `avatar-option ${emoji === selectedAvatar ? 'selected' : ''}`;
+                div.innerText = emoji;
+                div.onclick = () => {
+                    selectedAvatar = emoji;
+                    document.querySelectorAll('.avatar-option').forEach(el => el.classList.remove('selected'));
+                    div.classList.add('selected');
+                };
+                picker.appendChild(div);
+            });
+
+            const shopGrid = document.getElementById('shop-grid');
+            gifts.forEach(g => {
+                const div = document.createElement('div');
+                div.className = 'shop-item';
+                div.innerHTML = `<span class="shop-emoji">${g.emoji}</span><span class="shop-price">${g.price} R</span>`;
+                div.onclick = () => buyGift(g.emoji, g.price);
+                shopGrid.appendChild(div);
+            });
+        };
+
+        function toggleAuthMode() {
+            isLoginMode = !isLoginMode;
+            document.getElementById('main-auth-btn').innerText = isLoginMode ? 'Войти' : 'Создать аккаунт';
+            document.getElementById('switch-text').innerText = isLoginMode ? 'Нет аккаунта? Зарегистрироваться' : 'Уже есть аккаунт? Войти';
+            document.getElementById('auth-error').innerText = '';
+        }
+
+        function submitAuth() {
+            const user = document.getElementById('auth-username').value.trim();
+            const pass = document.getElementById('auth-password').value.trim();
+            if(!user || !pass) return document.getElementById('auth-error').innerText = "Заполните поля!";
+
+            const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+            if(ws) ws.close();
+            ws = new WebSocket(protocol + window.location.host);
+
+            ws.onopen = () => ws.send(JSON.stringify({ type: isLoginMode ? 'login' : 'register', username: user, password: pass }));
+
+            ws.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                if (data.type === 'auth_error') document.getElementById('auth-error').innerText = data.message;
+                if (data.type === 'auth_success') {
+                    if(!isLoginMode) { 
+                        toggleAuthMode(); 
+                        setTimeout(submitAuth, 500); 
+                        return; 
+                    }
+                    
+                    myName = user;
+                    document.getElementById('login-overlay').classList.add('hidden');
+                    document.getElementById('app').classList.remove('hidden');
+                    document.getElementById('my-name').innerText = data.display_name;
+                    document.getElementById('settings-display-name').value = data.display_name;
+                    document.getElementById('settings-six-id').value = data.six_digit_id;
+                    
+                    selectedAvatar = data.avatar || "👤";
+                    document.getElementById('my-avatar').innerText = selectedAvatar;
+                    document.getElementById('my-bio').innerText = data.bio;
+                    document.getElementById('coin-balance').innerText = data.coins;
+                    updateMyStatusDot(data.status);
+                    
+                    if (myName === 'revezzz') {
+                        document.getElementById('admin-panel').classList.remove('hidden');
+                    }
+                    
+                    setupAppLogic();
+                }
+            };
+        }
+
+        function setupAppLogic() {
+            ws.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                
+                if (data.type === 'user_list') {
+                    allUsers = data.users.filter(u => u.username !== myName);
+                    renderUserList();
+                }
+                if (data.type === 'update_coins') {
+                    document.getElementById('coin-balance').innerText = data.coins;
+                }
+                if (data.type === 'profile_updated') {
+                    document.getElementById('my-name').innerText = data.display_name;
+                }
+                if (data.type === 'history') {
+                    const messagesDiv = document.getElementById('messages');
+                    messagesDiv.innerHTML = '';
+                    data.messages.forEach(msg => {
+                        const isMe = msg.sender === myName;
+                        if (msg.isGift) {
+                            addGiftToScreen(msg.text, isMe ? "Вы" : msg.sender, msg.comment);
+                        } else {
+                            let msgHtml = `${msg.text} <span style="font-size: 11px; opacity: 0.5; margin-left: 8px;">${msg.timestamp || ''}</span>`;
+                            addMessageToScreen(msgHtml, isMe ? 'my-message' : 'their-message', false);
+                        }
+                    });
+                    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                }
+                if (data.type === 'private') {
+                    if (currentChatWith === data.from) {
+                        if (data.isGift) {
+                            addGiftToScreen(data.text, data.from, data.comment);
+                        } else {
+                            let msgHtml = `${data.text} <span style="font-size: 11px; opacity: 0.5; margin-left: 8px;">${data.time || ''}</span>`;
+                            addMessageToScreen(msgHtml, 'their-message', true);
+                        }
+                    } else {
+                        unreadMessages[data.from] = (unreadMessages[data.from] || 0) + 1;
+                        renderUserList();
+                    }
+                }
+                if (data.type === 'promo_result') {
+                    if(document.getElementById('promo-overlay').classList.contains('hidden')) {
+                        alert(data.message); 
+                    } else {
+                        const msgDiv = document.getElementById('promo-user-msg');
+                        msgDiv.innerText = data.message;
+                        msgDiv.style.color = data.success ? '#10b981' : '#ef4444';
+                        if(data.success && data.newBalance) {
+                            document.getElementById('coin-balance').innerText = data.newBalance;
+                            setTimeout(() => document.getElementById('promo-overlay').classList.add('hidden'), 1500);
+                        }
+                    }
+                }
+                
+                if (data.type === 'profile_data') {
+                    document.getElementById('profile-avatar').innerText = data.user.avatar;
+                    // ИСПРАВЛЕНИЕ: Теперь ID и Юзернейм выводятся в value, а текст в title
+                    document.getElementById('profile-six-id').innerText = data.user.six_digit_id;
+                    document.getElementById('profile-username').innerText = '@' + data.user.username;
+                    document.getElementById('profile-bio').innerText = data.user.bio;
+                    
+                    const statusText = document.getElementById('profile-status-text');
+                    if (data.user.status === 'online') {
+                        statusText.innerHTML = '<span style="font-size:16px;">✓</span> в сети';
+                        statusText.style.color = 'var(--online)';
+                    } else if (data.user.status === 'dnd') {
+                        statusText.innerHTML = '⛔ Не беспокоить';
+                        statusText.style.color = '#ef4444';
+                    } else {
+                        statusText.innerHTML = 'Был(а) недавно';
+                        statusText.style.color = 'var(--text-muted)';
+                    }
+
+                    const giftsDiv = document.getElementById('profile-gifts');
+                    giftsDiv.innerHTML = '';
+                    document.getElementById('gifts-count').innerText = data.gifts.length;
+                    if (data.gifts.length > 0) {
+                        data.gifts.forEach(g => {
+                            const div = document.createElement('div');
+                            div.className = 'profile-gift-item';
+                            div.innerHTML = `
+                                <div class="profile-gift-emoji">${g.gift_emoji}</div>
+                                <div class="profile-gift-sender">от ${g.sender}</div>
+                                ${g.comment ? `<div style="font-size:10px; color:#ec4899; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">"${g.comment}"</div>` : ''}
+                            `;
+                            giftsDiv.appendChild(div);
+                        });
+                    }
+                    document.getElementById('profile-overlay').classList.remove('hidden');
+                }
+                if (data.type === 'error') alert(data.message);
+            };
+        }
+
+        function openSettings() {
+            document.getElementById('settings-bio').value = document.getElementById('my-bio').innerText;
+            document.getElementById('settings-overlay').classList.remove('hidden');
+        }
+
+        function saveProfile() {
+            const newDisplayName = document.getElementById('settings-display-name').value.trim();
+            const newSixId = document.getElementById('settings-six-id').value.trim();
+            
+            if(newSixId.length !== 6 || isNaN(newSixId)) return alert("ID должен состоять из 6 цифр!");
+
+            ws.send(JSON.stringify({ 
+                type: 'update_profile', 
+                status: document.getElementById('settings-status').value, 
+                bio: document.getElementById('settings-bio').value.trim(), 
+                avatar: selectedAvatar,
+                display_name: newDisplayName,
+                six_digit_id: newSixId
+            }));
+            
+            document.getElementById('my-bio').innerText = document.getElementById('settings-bio').value.trim();
+            document.getElementById('my-avatar').innerText = selectedAvatar;
+            updateMyStatusDot(document.getElementById('settings-status').value);
+            document.getElementById('settings-overlay').classList.add('hidden');
+        }
+
+        function openUserProfile() {
+            if(!currentChatWith) return;
+            ws.send(JSON.stringify({ type: 'get_profile', target: currentChatWith }));
+        }
+
+        function createPromo() {
+            const code = document.getElementById('promo-code-input').value.trim();
+            const reward = parseInt(document.getElementById('promo-reward-input').value);
+            if(!code || !reward) return alert("Заполните поля!");
+            ws.send(JSON.stringify({ type: 'create_promo', code: code, reward: reward, max_uses: 10 }));
+            document.getElementById('promo-code-input').value = '';
+        }
+
+        function redeemPromo() {
+            const code = document.getElementById('redeem-input').value.trim();
+            if(!code) return;
+            ws.send(JSON.stringify({ type: 'redeem_promo', code: code }));
+        }
+
+        function openShop() {
+            if(!currentChatWith) return alert("Сначала выберите собеседника!");
+            document.getElementById('shop-overlay').classList.remove('hidden');
+        }
+
+        function buyGift(emoji, price) {
+            const comment = prompt("Добавьте пожелание к подарку:", "С наилучшими пожеланиями!");
+            if (comment === null) return; 
+
+            ws.send(JSON.stringify({ 
+                type: 'private', from: myName, to: currentChatWith, 
+                text: emoji, isGift: true, giftPrice: price, comment: comment 
+            }));
+            
+            addGiftToScreen(emoji, "Вы", comment);
+            document.getElementById('shop-overlay').classList.add('hidden');
+        }
+
+        function renderUserList() {
+            const listDiv = document.getElementById('user-list');
+            listDiv.innerHTML = '';
+            const searchVal = document.getElementById('search-input').value.toLowerCase();
+            
+            const filtered = allUsers.filter(u => 
+                u.username.toLowerCase().includes(searchVal) || 
+                (u.display_name && u.display_name.toLowerCase().includes(searchVal)) ||
+                (u.six_digit_id && u.six_digit_id.includes(searchVal))
+            );
+
+            filtered.forEach(user => {
+                const div = document.createElement('div');
+                div.className = 'user-item';
+                div.onclick = () => openChat(user.username);
+                
+                const unreadCount = unreadMessages[user.username] || 0;
+                const badge = unreadCount > 0 ? `<div class="unread-badge">${unreadCount}</div>` : '';
+                let statusIcon = user.status === 'dnd' ? '⛔ ' : (user.status === 'idle' ? '🌙 ' : '');
+
+                div.innerHTML = `
+                    <div class="avatar-wrapper">
+                        <div class="avatar">${user.avatar || '👤'}</div>
+                        <div class="status-dot ${user.status}"></div>
+                    </div>
+                    <div style="overflow: hidden;">
+                        <div style="font-weight: 500;">${statusIcon}${user.display_name || user.username}</div>
+                        <div style="font-size: 12px; color: var(--text-muted);">@${user.username}</div>
+                    </div>
+                    ${badge}
+                `;
+                listDiv.appendChild(div);
+            });
+        }
+
+        document.getElementById('search-input').addEventListener('input', renderUserList);
+
+        function openChat(user) {
+            currentChatWith = user;
+            const userObj = allUsers.find(u => u.username === user);
+            document.getElementById('chat-with').innerText = userObj ? (userObj.display_name || user) : user;
+            
+            document.getElementById('messages').innerHTML = ''; 
+            ws.send(JSON.stringify({ type: 'get_history', with: user }));
+            document.getElementById('message-input').disabled = false;
+            document.getElementById('send-btn').disabled = false;
+            document.getElementById('gift-btn').disabled = false; 
+            unreadMessages[user] = 0;
+            renderUserList();
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('message-input');
+            const text = input.value.trim();
+            if (!text || !currentChatWith) return;
+            ws.send(JSON.stringify({ type: 'private', from: myName, to: currentChatWith, text: text }));
+            addMessageToScreen(`${text} <span style="font-size: 11px; opacity: 0.5; margin-left: 8px;">${new Date().toLocaleTimeString()}</span>`, 'my-message', true);
+            input.value = '';
+        }
+
+        document.getElementById('message-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+
+        function addMessageToScreen(html, className, shouldScroll = true) {
+            const div = document.createElement('div');
+            div.className = 'message ' + className;
+            div.innerHTML = html;
+            document.getElementById('messages').appendChild(div);
+            if (shouldScroll) document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+        }
+
+        // НОВАЯ ФУНКЦИЯ ДЛЯ КРАСИВОГО ПОДАРКА В ЦЕНТРЕ
+        function addGiftToScreen(emoji, senderName, comment) {
+            const messagesDiv = document.getElementById('messages');
+            const div = document.createElement('div');
+            div.className = 'gift-event';
+            
+            let wishText = comment ? `«${comment}»` : '';
+
+            div.innerHTML = `
+                <div class="gift-icon-box">${emoji}</div>
+                <div class="gift-info-box">
+                    <div class="gift-sender-name">${senderName} дарит подарок!</div>
+                    ${wishText ? `<div class="gift-wish-text">${wishText}</div>` : ''}
+                </div>
+            `;
+            
+            messagesDiv.appendChild(div);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+        
+        function updateMyStatusDot(status) {
+            document.getElementById('my-status-dot').className = `status-dot ${status || 'online'}`;
+        }
+    </script>
+</body>
+</html>
