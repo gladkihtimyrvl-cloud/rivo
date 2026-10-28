@@ -5,6 +5,8 @@
     
     <!-- СТРОЧКИ ДЛЯ ПРЕВРАЩЕНИЯ САЙТА В ПРИЛОЖЕНИЕ (PWA) -->
     <link rel="manifest" href="manifest.json">
+    <!-- ИКОНКА ДЛЯ IPHONE -->
+    <link rel="apple-touch-icon" href="icon.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#17212b">
@@ -24,6 +26,16 @@
         #app { display: flex; width: 100%; height: 100%; }
 
         .coin-icon { vertical-align: middle; width: 16px; height: 16px; margin-right: 4px; margin-top: -2px; }
+
+        /* --- АНИМАЦИИ ДЛЯ ОКОН --- */
+        @keyframes modalFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes modalSlideUp {
+            from { transform: translateY(30px) scale(0.95); opacity: 0; }
+            to { transform: translateY(0) scale(1); opacity: 1; }
+        }
 
         /* ЛЕВАЯ ПАНЕЛЬ */
         #sidebar { width: 340px; background: var(--bg-panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 2; }
@@ -76,12 +88,13 @@
         .action-btn { background: none; border: none; color: var(--text-muted); font-size: 24px; cursor: pointer; padding: 5px; transition: 0.2s; }
         .action-btn:hover { color: var(--accent); }
 
-        /* МОДАЛКИ */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 100; }
-        .modal-box { background: var(--bg-panel); border-radius: 12px; width: 400px; max-height: 90vh; overflow-y: auto; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        /* МОДАЛКИ С АНИМАЦИЕЙ */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; z-index: 100; animation: modalFadeIn 0.3s ease; }
+        .modal-box { background: var(--bg-panel); border-radius: 12px; width: 400px; max-height: 90vh; overflow-y: auto; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); animation: modalSlideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        
         .modal-box h2 { margin-top: 0; text-align: center; font-weight: 500; font-size: 20px; }
         .modal-box input, .modal-box select { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-main); color: white; outline: none; font-size: 15px; }
-        .modal-box button { width: 100%; padding: 12px; border-radius: 8px; border: none; background: var(--accent); color: white; font-weight: 600; cursor: pointer; margin-bottom: 10px; }
+        .modal-box button { width: 100%; padding: 12px; border-radius: 8px; border: none; background: var(--accent); color: white; font-weight: 600; cursor: pointer; margin-bottom: 10px; transition: 0.2s;}
         .modal-box button:hover { background: var(--accent-hover); }
         .hidden { display: none !important; }
 
