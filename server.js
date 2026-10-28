@@ -28,6 +28,9 @@ db.serialize(() => {
     db.run(`CREATE TABLE IF NOT EXISTS group_members (group_id INTEGER, username TEXT, PRIMARY KEY (group_id, username))`);
     db.run(`CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY AUTOINCREMENT, sender TEXT, receiver TEXT, text TEXT, isGift INTEGER, timestamp TEXT)`);
     db.run(`CREATE TABLE IF NOT EXISTS received_gifts (id INTEGER PRIMARY KEY AUTOINCREMENT, sender TEXT, receiver TEXT, gift_emoji TEXT, comment TEXT, timestamp TEXT)`);
+    db.run(`CREATE TABLE IF NOT EXISTS promocodes (code TEXT UNIQUE, reward INTEGER, max_uses INTEGER, current_uses INTEGER DEFAULT 0)`);
+    // НОВАЯ ТАБЛИЦА ДЛЯ БЛОКИРОВОК
+    db.run(`CREATE TABLE IF NOT EXISTS blocks (blocker TEXT, blocked TEXT, PRIMARY KEY (blocker, blocked))`);
 });
 
 const clients = new Map(); 
@@ -84,7 +87,6 @@ wss.on('connection', function connection(ws) {
                 });
             }
 
-            // ПОЛУЧИТЬ СПИСОК ЛИЧНЫХ ЧАТОВ (ТЕХ, С КЕМ ЕСТЬ ИСТОРИЯ)
             if (data.type === 'get_chat_list') {
                 db.all(`SELECT DISTINCT CASE WHEN sender = ? THEN receiver ELSE sender END as contact 
                         FROM messages 
@@ -106,11 +108,18 @@ wss.on('connection', function connection(ws) {
                 });
             }
 
+            // ОТПРАВКА ЛИЧНЫХ СООБЩЕНИЙ (С ПРОВЕРКОЙ НА БЛОКИРОВКУ)
             if (data.type === 'private' && !data.isGift) {
-                const time = new Date().toLocaleTimeString();
-                db.run(`INSERT INTO messages (sender, receiver, text, isGift, timestamp) VALUES (?, ?, ?, 0, ?)`, [data.from, data.to, data.text, time]);
-                const recipientSocket = clients.get(data.to);
-                if (recipientSocket) recipientSocket.send(JSON.stringify({ type: 'private', from: data.from, text: data.text, isGift: false, time: time }));
+                // Проверяем, не заблокировал ли нас получатель
+                db.get(`SELECT * FROM blocks WHERE blocker = ? AND blocked = ?`, [data.to, ws.username], (err, block) => {
+                    if (block) {
+                        return ws.send(JSON.stringify({ type: 'error', message: 'Вы заблокированы этим пользователем.' }));
+                    }
+                    const time = new Date().toLocaleTimeString();
+                    db.run(`INSERT INTO messages (sender, receiver, text, isGift, timestamp) VALUES (?, ?, ?, 0, ?)`, [data.from, data.to, data.text, time]);
+                    const recipientSocket = clients.get(data.to);
+                    if (recipientSocket) recipientSocket.send(JSON.stringify({ type: 'private', from: data.from, text: data.text, isGift: false, time: time }));
+                });
             }
 
             if (data.type === 'group_message') {
@@ -133,9 +142,20 @@ wss.on('connection', function connection(ws) {
             }
             
             if (data.type === 'get_profile') {
-                db.get(`SELECT username, display_name, six_digit_id, status, bio, avatar FROM users WHERE username = ?`, [data.target], (err, user) => {
-                    db.all(`SELECT * FROM received_gifts WHERE receiver = ? ORDER BY id DESC`, [data.target], (err, gifts) => {
-                        ws.send(JSON.stringify({ type: 'profile_data', user: user, gifts: gifts }));
+                db.get(`SELECT username, display_name, six_digit_id, status, bio, avatar, coins FROM users WHERE username = ?`, [data.target], (err, user) => {
+                    // Проверяем, заблокировал ли я его, и заблокировал ли он меня
+                    db.get(`SELECT * FROM blocks WHERE blocker = ? AND blocked = ?`, [ws.username, data.target], (e, iBlocked) => {
+                        db.get(`SELECT * FROM blocks WHERE blocker = ? AND blocked = ?`, [data.target, ws.username], (e, heBlocked) => {
+                            db.all(`SELECT * FROM received_gifts WHERE receiver = ? ORDER BY id DESC`, [data.target], (err, gifts) => {
+                                ws.send(JSON.stringify({ 
+                                    type: 'profile_data', 
+                                    user: user, 
+                                    gifts: gifts,
+                                    iBlocked: !!iBlocked,
+                                    heBlocked: !!heBlocked
+                                }));
+                            });
+                        });
                     });
                 });
             }
@@ -149,13 +169,64 @@ wss.on('connection', function connection(ws) {
             if (data.type === 'private' && data.isGift) {
                 db.get(`SELECT coins FROM users WHERE username = ?`, [ws.username], (err, row) => {
                     if (row.coins < data.giftPrice) return ws.send(JSON.stringify({ type: 'error', message: 'Недостаточно R-коинов!' }));
-                    db.run(`UPDATE users SET coins = coins - ? WHERE username = ?`, [data.giftPrice, ws.username], () => {
-                        const time = new Date().toLocaleTimeString();
-                        db.run(`INSERT INTO messages (sender, receiver, text, isGift, timestamp) VALUES (?, ?, ?, 1, ?)`, [data.from, data.to, data.text, time]);
-                        db.run(`INSERT INTO received_gifts (sender, receiver, gift_emoji, comment, timestamp) VALUES (?, ?, ?, ?, ?)`, [data.from, data.to, data.text, data.comment, time]);
-                        const recipientSocket = clients.get(data.to);
-                        if (recipientSocket) recipientSocket.send(JSON.stringify({ type: 'private', from: data.from, text: data.text, isGift: true, comment: data.comment, time: time }));
-                        ws.send(JSON.stringify({ type: 'update_coins', coins: row.coins - data.giftPrice }));
+                    
+                    // Проверка на блокировку для подарков
+                    db.get(`SELECT * FROM blocks WHERE blocker = ? AND blocked = ?`, [data.to, ws.username], (err, block) => {
+                        if (block) return ws.send(JSON.stringify({ type: 'error', message: 'Вы заблокированы этим пользователем.' }));
+
+                        db.run(`UPDATE users SET coins = coins - ? WHERE username = ?`, [data.giftPrice, ws.username], () => {
+                            const time = new Date().toLocaleTimeString();
+                            db.run(`INSERT INTO messages (sender, receiver, text, isGift, timestamp) VALUES (?, ?, ?, 1, ?)`, [data.from, data.to, data.text, time]);
+                            db.run(`INSERT INTO received_gifts (sender, receiver, gift_emoji, comment, timestamp) VALUES (?, ?, ?, ?, ?)`, [data.from, data.to, data.text, data.comment, time]);
+                            const recipientSocket = clients.get(data.to);
+                            if (recipientSocket) recipientSocket.send(JSON.stringify({ type: 'private', from: data.from, text: data.text, isGift: true, comment: data.comment, time: time }));
+                            ws.send(JSON.stringify({ type: 'update_coins', coins: row.coins - data.giftPrice }));
+                        });
+                    });
+                });
+            }
+
+            // БЛОКИРОВКА / РАЗБЛОКИРОВКА
+            if (data.type === 'block_user') {
+                db.run(`INSERT OR IGNORE INTO blocks (blocker, blocked) VALUES (?, ?)`, [ws.username, data.target], () => {
+                    ws.send(JSON.stringify({ type: 'action_success', action: 'block', target: data.target }));
+                });
+            }
+            if (data.type === 'unblock_user') {
+                db.run(`DELETE FROM blocks WHERE blocker = ? AND blocked = ?`, [ws.username, data.target], () => {
+                    ws.send(JSON.stringify({ type: 'action_success', action: 'unblock', target: data.target }));
+                });
+            }
+
+            // УДАЛЕНИЕ ЧАТА
+            if (data.type === 'delete_chat') {
+                db.run(`DELETE FROM messages WHERE (sender = ? AND receiver = ?) OR (sender = ? AND receiver = ?)`, 
+                [ws.username, data.target, data.target, ws.username], () => {
+                    ws.send(JSON.stringify({ type: 'chat_deleted', target: data.target }));
+                });
+            }
+
+            // СОЗДАНИЕ ПРОМОКОДА (ТОЛЬКО ДЛЯ revezzz)
+            if (data.type === 'create_promo') {
+                if (ws.username !== 'revezzz') return ws.send(JSON.stringify({ type: 'promo_result', success: false, message: 'У вас нет прав!' }));
+                const code = data.code.toUpperCase();
+                db.run(`INSERT INTO promocodes (code, reward, max_uses) VALUES (?, ?, ?)`, [code, data.reward, data.max_uses], function(err) {
+                    if (err) ws.send(JSON.stringify({ type: 'promo_result', success: false, message: 'Промокод уже существует!' }));
+                    else ws.send(JSON.stringify({ type: 'promo_result', success: true, message: `Промокод ${code} создан!` }));
+                });
+            }
+
+            if (data.type === 'redeem_promo') {
+                const code = data.code.toUpperCase();
+                db.get(`SELECT * FROM promocodes WHERE code = ?`, [code], (err, row) => {
+                    if (err || !row) return ws.send(JSON.stringify({ type: 'promo_result', success: false, message: 'Промокод не найден!' }));
+                    if (row.current_uses >= row.max_uses) return ws.send(JSON.stringify({ type: 'promo_result', success: false, message: 'Лимит исчерпан!' }));
+                    db.run(`UPDATE promocodes SET current_uses = current_uses + 1 WHERE code = ?`, [code]);
+                    db.run(`UPDATE users SET coins = coins + ? WHERE username = ?`, [row.reward, ws.username], () => {
+                        db.get(`SELECT coins FROM users WHERE username = ?`, [ws.username], (e, r) => {
+                            ws.send(JSON.stringify({ type: 'promo_result', success: true, message: `+${row.reward} R-коинов!`, newBalance: r.coins }));
+                            broadcastAllUsers();
+                        });
                     });
                 });
             }
