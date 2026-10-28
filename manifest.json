@@ -1,0 +1,15 @@
+{
+  "name": "Rivo",
+  "short_name": "Rivo",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0e1621",
+  "theme_color": "#17212b",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/134/134504.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
