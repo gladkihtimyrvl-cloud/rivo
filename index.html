@@ -187,7 +187,6 @@
             
             <div style="background: var(--bg-panel); padding: 20px; border-radius: 16px; margin-top: 10px;">
                 
-                <!-- БЛОК УЛУЧШЕНИЯ -->
                 <div id="my-upgrade-section" class="hidden" style="margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px;">
                     <h4 style="margin: 0 0 10px 0; color: var(--gold);">Улучшить до NFT (1000 R)</h4>
                     <div style="display: flex; gap: 10px; justify-content: space-between;" id="upgrade-gifts-grid"></div>
@@ -360,6 +359,12 @@
     </div>
 
     <script>
+        // ПЕРЕХВАТЧИК ОШИБОК
+        window.onerror = function(message, source, lineno, colno, error) {
+            alert("Ошибка JavaScript: " + message + "\nСтрока: " + lineno);
+            return false;
+        };
+
         let ws, myUser = null, isLoginMode = true;
         let allUsers = []; 
         let myContacts = []; 
@@ -620,7 +625,7 @@
                     }
                     
                     ws.send(JSON.stringify({ type: 'get_nfts', target: u.username }));
-                    document.getElementById('profile-view-overlay').classList.remove('hidden');
+                    document.getElementById('profile-view-overlay').classList.remove('hidden', 'animate-out');
                 }
 
                 if (data.type === 'user_nfts') {
@@ -703,7 +708,7 @@
         let currentUpgradeBase = null;
         function openRoulette(baseType) {
             currentUpgradeBase = baseType;
-            document.getElementById('roulette-overlay').classList.remove('hidden');
+            document.getElementById('roulette-overlay').classList.remove('hidden', 'animate-out');
             document.getElementById('roulette-result').classList.add('hidden');
             document.getElementById('spin-btn').style.display = 'block';
             
@@ -921,7 +926,7 @@
             selectedAvatarBase64 = myUser.avatar || '';
             updateBalanceUI(); 
             document.getElementById('redeem-msg').innerText = ''; 
-            document.getElementById('settings-overlay').classList.remove('hidden');
+            document.getElementById('settings-overlay').classList.remove('hidden', 'animate-out');
         }
 
         function saveProfile() {
@@ -943,7 +948,7 @@
                     ${u.display_name}
                 </label>
             `).join('');
-            document.getElementById('group-overlay').classList.remove('hidden');
+            document.getElementById('group-overlay').classList.remove('hidden', 'animate-out');
         }
 
         function createGroup() {
@@ -955,13 +960,13 @@
 
         function openMarket() {
             ws.send(JSON.stringify({ type: 'get_marketplace' }));
-            document.getElementById('market-overlay').classList.remove('hidden');
+            document.getElementById('market-overlay').classList.remove('hidden', 'animate-out');
         }
 
         function openShop() { 
             if(currentChatId && currentChatType==='user') {
                 updateBalanceUI();
-                document.getElementById('shop-overlay').classList.remove('hidden'); 
+                document.getElementById('shop-overlay').classList.remove('hidden', 'animate-out'); 
             }
         }
         
