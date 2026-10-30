@@ -323,7 +323,10 @@
             <div class="sidebar-header">
                 <div class="menu-btn" onclick="openMyProfile()">☰</div>
                 <div style="font-weight:bold; font-size:18px;">Rivo</div>
-                <div class="menu-btn" onclick="openMarket()">🛒</div> <!-- МАРКЕТПЛЕЙС -->
+                <div style="display:flex; gap:10px;">
+                    <div class="menu-btn" onclick="openShop()" title="Магазин подарков">🛍️</div> <!-- НОВАЯ КНОПКА МАГАЗИНА -->
+                    <div class="menu-btn" onclick="openMarket()" title="Маркетплейс NFT">🛒</div>
+                </div>
             </div>
             <div class="search-container"><input type="text" id="search-input" placeholder="Поиск..." oninput="renderChats()"></div>
             <div id="chat-list"></div>
@@ -355,11 +358,8 @@
         let allUsers = [], myContacts = [], myGroups = [], unreadMessages = {};
         let selectedAvatarBase64 = "", viewingUser = null, currentChatId = null, currentChatType = null;
         let currentUpgradeBase = null;
-        let currentShopTab = 'regular'; // 'regular' или 'upgradeable'
+        let currentShopTab = 'regular';
 
-        // ==========================================
-        // КАТАЛОГ ПОДАРКОВ (СТРОГО ПО ТЗ)
-        // ==========================================
         const GIFT_CATALOG = {
             // Обычные
             'teddy_bear': { name: 'Teddy Bear', price: 100, rarity: 'Common', emoji: '🧸', upgradeable: false },
@@ -495,11 +495,16 @@
                     updateBalanceUI(); ws.send(JSON.stringify({ type: 'get_groups' })); ws.send(JSON.stringify({ type: 'get_chat_list' })); 
                 }
                 
-                if(data.type === 'user_list') { allUsers = data.users; renderChats(); }
+                if(data.type === 'user_list') { 
+                    allUsers = data.users; 
+                    const tCount = document.getElementById('total-users-count'); 
+                    if(tCount) tCount.innerText = allUsers.length; 
+                    renderChats(); 
+                }
                 if(data.type === 'chat_list') { myContacts = data.contacts; renderChats(); }
                 if(data.type === 'my_groups') { myGroups = data.groups; renderChats(); }
                 
-                // === ПРОФИЛЬ (ТЕЛЕГРАМ СТИЛЬ) ===
+                // === ПРОФИЛЬ ===
                 if (data.type === 'profile_data') {
                     const usr = data.user; viewingUser = usr.username;
                     document.getElementById('view-avatar').innerHTML = usr.avatar ? `<img src="${usr.avatar}">` : '👤';
@@ -733,8 +738,8 @@
 
         function openUserProfile(u) { ws.send(JSON.stringify({ type: 'get_profile', target: u })); }
         function openMyProfile() { ws.send(JSON.stringify({ type: 'get_profile', target: myUser.username })); }
-        function openMarket() { ws.send(JSON.stringify({ type: 'get_marketplace' })); } // Открытие маркетплейса
-        function openShop() { if(currentChatId) document.getElementById('shop-overlay').classList.remove('hidden', 'animate-out'); }
+        function openMarket() { ws.send(JSON.stringify({ type: 'get_marketplace' })); }
+        function openShop() { updateBalanceUI(); document.getElementById('shop-overlay').classList.remove('hidden', 'animate-out'); }
         function openSettings() {
             closeModal('profile-view-overlay');
             document.getElementById('settings-display-name').value = myUser.display_name;
