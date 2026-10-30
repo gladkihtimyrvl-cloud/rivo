@@ -37,17 +37,8 @@
         @keyframes slideOutRight { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
         @keyframes spin { 100% { transform: rotate(360deg); } }
         
-        /* НОВЫЕ АНИМАЦИИ ДЛЯ NFT */
-        @keyframes holoShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-        @keyframes floatGift {
-            0% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-10px) rotate(2deg); }
-            100% { transform: translateY(0px) rotate(0deg); }
-        }
+        @keyframes holoShift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        @keyframes floatGift { 0% { transform: translateY(0px) rotate(0deg); } 50% { transform: translateY(-10px) rotate(2deg); } 100% { transform: translateY(0px) rotate(0deg); } }
 
         /* ЛЕВАЯ ПАНЕЛЬ */
         #sidebar { width: 340px; background: var(--bg-panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 2; position: relative; }
@@ -106,7 +97,7 @@
         .modal-box button { width: 100%; padding: 12px; border-radius: 8px; border: none; background: var(--accent); color: white; font-weight: 600; cursor: pointer; margin-bottom: 10px; }
         .hidden { display: none !important; }
 
-        /* ПРОФИЛЬ */
+        /* ПРОФИЛЬ (TELEGRAM STYLE) */
         .profile-header { background: linear-gradient(135deg, #1e293b, #0f172a); border-radius: 16px; padding: 20px; text-align: center; position: relative; overflow: hidden; margin-bottom: 15px; border: 1px solid var(--border); }
         .profile-header::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100px; background: linear-gradient(90deg, #5eb5f7, #7c3aed, #db2777); opacity: 0.3; z-index: 0; }
         .profile-avatar-big { width: 90px; height: 90px; border-radius: 50%; background: #202b36; margin: 0 auto 10px; display: flex; justify-content: center; align-items: center; font-size: 40px; overflow: hidden; position: relative; z-index: 1; border: 3px solid var(--bg-panel); box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
@@ -115,40 +106,26 @@
         .badge { width: 24px; height: 24px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 12px; color: white; }
         .profile-balance { background: rgba(251, 191, 36, 0.1); border: 1px solid var(--gold); padding: 12px 15px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; font-weight: bold; color: var(--gold); }
 
-        /* ========================================= */
-        /* НОВЫЙ ДИЗАЙН NFT КАРТОЧЕК (КАК В SLASHER) */
-        /* ========================================= */
+        /* NFT и ПОДАРКИ */
         .nft-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 15px; }
-        
         .nft-card { 
-            border-radius: 16px; padding: 15px; text-align: center; 
-            position: relative; overflow: hidden; transition: 0.3s; cursor: pointer; 
-            background: #1e293b; /* Темный фон карточки */
-            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 16px; padding: 15px; text-align: center; position: relative; overflow: hidden; 
+            transition: 0.3s; cursor: pointer; background: #1e293b; border: 2px solid rgba(255,255,255,0.1);
             box-shadow: 0 10px 20px rgba(0,0,0,0.5), inset 0 0 20px rgba(0,0,0,0.5);
         }
-        
         .nft-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.7); }
-
-        /* Голографический фон для NFT */
-        .nft-bg { 
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            z-index: 0; opacity: 0.4; 
-            background-size: 200% 200%;
-            animation: holoShift 5s infinite alternate;
-        }
-
-        .nft-card svg { 
-            width: 80px; height: 80px; position: relative; z-index: 1; 
-            filter: drop-shadow(0 15px 15px rgba(0,0,0,0.6)); /* Объемная тень */
-            transition: 0.3s;
-        }
+        .nft-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; opacity: 0.4; background-size: 200% 200%; animation: holoShift 5s infinite alternate; }
+        .nft-card svg { width: 80px; height: 80px; position: relative; z-index: 1; filter: drop-shadow(0 15px 15px rgba(0,0,0,0.6)); transition: 0.3s; }
         .nft-card:hover svg { transform: scale(1.1); }
-
         .nft-info { position: relative; z-index: 1; margin-top: 10px; }
         .nft-rarity { font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
         .nft-num { font-size: 12px; color: white; font-weight: bold; margin-top: 2px; }
-        .nft-price-badge { background: rgba(0,0,0,0.6); color: var(--gold); padding: 2px 8px; border-radius: 10px; font-size: 12px; display: inline-block; margin-top: 5px; }
+
+        .shop-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+        .shop-item { background: var(--bg-main); padding: 15px; border-radius: 12px; text-align: center; cursor: pointer; border: 1px solid var(--border); transition: 0.2s; }
+        .shop-item:hover { transform: scale(1.05); border-color: var(--gold); }
+        .shop-item svg { width: 60px; height: 60px; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5)); }
+        .shop-price { color: var(--gold); font-weight: bold; margin-top: 10px; }
 
         /* ВЫВОД ПОДАРКА В ЧАТЕ */
         .gift-event { align-self: center; display: flex; flex-direction: column; align-items: center; margin: 20px 0; animation: modalFadeIn 0.5s ease; }
@@ -186,6 +163,19 @@
             <button id="main-auth-btn" onclick="submitAuth()">Войти</button>
             <div style="text-align:center; color:var(--accent); cursor:pointer;" id="switch-text" onclick="toggleAuthMode()">Нет аккаунта? Зарегистрироваться</div>
             <div id="auth-error" style="color: #ef4444; margin-top: 10px; text-align: center; font-size: 14px;"></div>
+        </div>
+    </div>
+
+    <!-- МОДАЛЬНОЕ ОКНО ДЕТАЛЕЙ (ПОДАРОК ИЛИ NFT) -->
+    <div id="item-detail-overlay" class="modal-overlay hidden">
+        <div class="modal-box" style="text-align: center; padding: 30px 20px;">
+            <div id="detail-svg" style="width: 150px; height: 150px; margin: 0 auto 20px; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.6));"></div>
+            <h2 id="detail-title" style="margin-bottom: 5px;"></h2>
+            <div id="detail-rarity" style="font-size: 14px; font-weight: bold; margin-bottom: 10px;"></div>
+            <div id="detail-info" style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px;"></div>
+            
+            <button id="detail-action-btn" style="display: none;">Действие</button>
+            <button onclick="closeModal('item-detail-overlay')" style="background: transparent; border: 1px solid var(--border);">Закрыть</button>
         </div>
     </div>
 
@@ -321,14 +311,14 @@
         </div>
     </div>
 
-    <!-- МАГАЗИН ОБЫЧНЫХ ПОДАРКОВ -->
+    <!-- МАГАЗИН ПОДАРКОВ -->
     <div id="shop-overlay" class="modal-overlay hidden">
         <div class="modal-box">
             <h2>Магазин подарков</h2>
             <div style="text-align:center; color:var(--gold); margin-bottom:15px; font-weight:bold; font-size:16px;">
                 Ваш баланс: <span id="shop-balance">0</span> R
             </div>
-            <div class="shop-grid" id="shop-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;"></div>
+            <div class="shop-grid" id="shop-grid"></div>
             <button onclick="closeModal('shop-overlay')" style="margin-top:15px; background:var(--bg-input);">Отмена</button>
         </div>
     </div>
@@ -407,40 +397,60 @@
         let currentUserBlocked = false;
 
         // ==========================================
-        // НОВЫЕ ДЕТАЛИЗИРОВАННЫЕ 3D ПОДАРКИ (SVG)
+        // SVG ПОДАРКИ
         // ==========================================
         const GIFTS = {
-            'gift_bear': `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                <defs><radialGradient id="fur" cx="30%" cy="30%" r="70%"><stop offset="0%" stop-color="#A1887F"/><stop offset="60%" stop-color="#5D4037"/><stop offset="100%" stop-color="#3E2723"/></radialGradient></defs>
-                <circle cx="22" cy="22" r="18" fill="#3E2723"/><circle cx="22" cy="22" r="10" fill="#8D6E63"/>
-                <circle cx="78" cy="22" r="18" fill="#3E2723"/><circle cx="78" cy="22" r="10" fill="#8D6E63"/>
-                <circle cx="50" cy="55" r="42" fill="url(#fur)"/>
-                <circle cx="30" cy="45" r="8" fill="#212121"/><circle cx="32" cy="43" r="2" fill="white"/>
-                <circle cx="70" cy="45" r="8" fill="#212121"/><circle cx="72" cy="43" r="2" fill="white"/>
-                <ellipse cx="50" cy="65" rx="16" ry="11" fill="#EFEBE9"/>
-                <circle cx="50" cy="60" r="7" fill="#212121"/><circle cx="48" cy="58" r="2" fill="white"/>
-            </svg>`,
-            'gift_crown': `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                <defs><linearGradient id="gold" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#FFF59D"/><stop offset="50%" stop-color="#FFC107"/><stop offset="100%" stop-color="#FF6F00"/></linearGradient></defs>
-                <path d="M12 65 L5 15 L35 45 L50 5 L65 45 L95 15 L88 65 Z" fill="url(#gold)"/>
-                <rect x="12" y="65" width="76" height="20" fill="#E65100"/>
-                <circle cx="50" cy="20" r="6" fill="#F44336"/><circle cx="18" cy="30" r="4" fill="#2196F3"/><circle cx="82" cy="30" r="4" fill="#2196F3"/>
-            </svg>`,
-            'gift_rose': `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                <defs><radialGradient id="rose" cx="30%" cy="30%" r="70%"><stop offset="0%" stop-color="#FF80AB"/><stop offset="100%" stop-color="#C2185B"/></radialGradient></defs>
-                <path d="M50 15 C15 15, 5 50, 30 70 C40 80, 50 90, 50 100 C50 90, 60 80, 70 70 C95 50, 85 15, 50 15 Z" fill="url(#rose)"/>
-                <path d="M50 85 L50 110" stroke="#1B5E20" stroke-width="6"/>
-                <path d="M50 95 Q30 90 25 100" stroke="#4CAF50" stroke-width="4" fill="none"/>
-            </svg>`,
-            'gift_diamond': `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                <defs><linearGradient id="dia" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#E0FFFF"/><stop offset="50%" stop-color="#00BCD4"/><stop offset="100%" stop-color="#006064"/></linearGradient></defs>
-                <polygon points="50,5 95,40 50,95 5,40" fill="url(#dia)"/>
-                <polygon points="50,5 70,40 50,95 30,40" fill="#80DEEA" opacity="0.6"/>
-                <line x1="5" y1="40" x2="95" y2="40" stroke="#E0FFFF" stroke-width="2"/>
-            </svg>`
+            'gift_bear': { 
+                svg: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <defs><radialGradient id="fur" cx="30%" cy="30%" r="70%"><stop offset="0%" stop-color="#A1887F"/><stop offset="60%" stop-color="#5D4037"/><stop offset="100%" stop-color="#3E2723"/></radialGradient></defs>
+                    <circle cx="22" cy="22" r="18" fill="#3E2723"/><circle cx="22" cy="22" r="10" fill="#8D6E63"/>
+                    <circle cx="78" cy="22" r="18" fill="#3E2723"/><circle cx="78" cy="22" r="10" fill="#8D6E63"/>
+                    <circle cx="50" cy="55" r="42" fill="url(#fur)"/>
+                    <circle cx="30" cy="45" r="8" fill="#212121"/><circle cx="32" cy="43" r="2" fill="white"/>
+                    <circle cx="70" cy="45" r="8" fill="#212121"/><circle cx="72" cy="43" r="2" fill="white"/>
+                    <ellipse cx="50" cy="65" rx="16" ry="11" fill="#EFEBE9"/>
+                    <circle cx="50" cy="60" r="7" fill="#212121"/><circle cx="48" cy="58" r="2" fill="white"/>
+                </svg>`, 
+                name: 'Плюшевый Мишка', price: 100, rarity: 'Epic' 
+            },
+            'gift_crown': { 
+                svg: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <defs><linearGradient id="gold" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#FFF59D"/><stop offset="50%" stop-color="#FFC107"/><stop offset="100%" stop-color="#FF6F00"/></linearGradient></defs>
+                    <path d="M12 65 L5 15 L35 45 L50 5 L65 45 L95 15 L88 65 Z" fill="url(#gold)"/>
+                    <rect x="12" y="65" width="76" height="20" fill="#E65100"/>
+                    <circle cx="50" cy="20" r="6" fill="#F44336"/><circle cx="18" cy="30" r="4" fill="#2196F3"/><circle cx="82" cy="30" r="4" fill="#2196F3"/>
+                </svg>`, 
+                name: 'Золотая Корона', price: 500, rarity: 'Legendary' 
+            },
+            'gift_rose': { 
+                svg: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <defs><radialGradient id="rose" cx="30%" cy="30%" r="70%"><stop offset="0%" stop-color="#FF80AB"/><stop offset="100%" stop-color="#C2185B"/></radialGradient></defs>
+                    <path d="M50 15 C15 15, 5 50, 30 70 C40 80, 50 90, 50 100 C50 90, 60 80, 70 70 C95 50, 85 15, 50 15 Z" fill="url(#rose)"/>
+                    <path d="M50 85 L50 110" stroke="#1B5E20" stroke-width="6"/>
+                    <path d="M50 95 Q30 90 25 100" stroke="#4CAF50" stroke-width="4" fill="none"/>
+                </svg>`, 
+                name: 'Роза', price: 10, rarity: 'Common' 
+            },
+            'gift_diamond': { 
+                svg: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <defs><linearGradient id="dia" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#E0FFFF"/><stop offset="50%" stop-color="#00BCD4"/><stop offset="100%" stop-color="#006064"/></linearGradient></defs>
+                    <polygon points="50,5 95,40 50,95 5,40" fill="url(#dia)"/>
+                    <polygon points="50,5 70,40 50,95 30,40" fill="#80DEEA" opacity="0.6"/>
+                    <line x1="5" y1="40" x2="95" y2="40" stroke="#E0FFFF" stroke-width="2"/>
+                </svg>`, 
+                name: 'Алмаз', price: 50, rarity: 'Rare' 
+            }
         };
         
         const coinSvg = `<svg class="coin-icon" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="url(#paint0_linear)"/><circle cx="12" cy="12" r="8" stroke="#B45309" stroke-width="1.5"/><path d="M9 16V8H12.5C14.433 8 16 9.119 16 11C16 12.881 14.433 14 12.5 14H11V16H9ZM11 12H12.5C13.3284 12 14 11.552 14 11C14 10.448 13.3284 10 12.5 10H11V12Z" fill="#78350F"/><defs><linearGradient id="paint0_linear" x1="12" y1="2" x2="12" y2="22" gradientUnits="userSpaceOnUse"><stop stop-color="#FDE047"/><stop offset="1" stop-color="#EAB308"/></linearGradient></defs></svg>`;
+
+        const rarityGradients = {
+            'Common': 'linear-gradient(45deg, #4B5563, #9CA3AF, #4B5563)',
+            'Rare': 'linear-gradient(45deg, #1E3A8A, #3B82F6, #1E3A8A)',
+            'Epic': 'linear-gradient(45deg, #4C1D95, #8B5CF6, #4C1D95)',
+            'Legendary': 'linear-gradient(45deg, #78350F, #F59E0B, #78350F)'
+        };
+        const rarityColors = { 'Common': '#9CA3AF', 'Rare': '#3B82F6', 'Epic': '#8B5CF6', 'Legendary': '#F59E0B' };
 
         // ЛОГИКА PULL TO REFRESH
         const chatListEl = document.getElementById('chat-list');
@@ -451,61 +461,42 @@
         let isPulling = false;
 
         chatListEl.addEventListener('touchstart', (e) => {
-            if (chatListEl.scrollTop === 0) {
-                touchStartY = e.touches[0].clientY;
-                isPulling = true;
-            }
+            if (chatListEl.scrollTop === 0) { touchStartY = e.touches[0].clientY; isPulling = true; }
         }, { passive: true });
 
         chatListEl.addEventListener('touchmove', (e) => {
             if (!isPulling) return;
             const touchY = e.touches[0].clientY;
             const distance = touchY - touchStartY;
-            
             if (distance > 0 && chatListEl.scrollTop === 0) {
                 ptrIndicator.style.height = Math.min(distance * 0.5, 60) + 'px';
                 ptrIndicator.style.padding = '10px 0';
                 ptrText.innerText = distance > 100 ? 'Отпустите для обновления' : 'Потяните вниз';
-                if (distance > 100) ptrIndicator.style.color = 'var(--accent)';
-                else ptrIndicator.style.color = 'var(--text-muted)';
+                ptrIndicator.style.color = distance > 100 ? 'var(--accent)' : 'var(--text-muted)';
             }
         }, { passive: true });
 
         chatListEl.addEventListener('touchend', () => {
             if (!isPulling) return;
             isPulling = false;
-            
             if (ptrIndicator.style.height === '60px') {
-                ptrText.style.display = 'none';
-                ptrSpinner.style.display = 'block';
-                ptrIndicator.style.height = '60px';
-                
+                ptrText.style.display = 'none'; ptrSpinner.style.display = 'block'; ptrIndicator.style.height = '60px';
                 if(ws && ws.readyState === WebSocket.OPEN) {
                     ws.send(JSON.stringify({ type: 'get_chat_list' }));
                     ws.send(JSON.stringify({ type: 'get_groups' }));
                 }
-                
                 setTimeout(() => {
-                    ptrIndicator.style.height = '0px';
-                    ptrIndicator.style.padding = '0px';
-                    ptrText.style.display = 'block';
-                    ptrSpinner.style.display = 'none';
-                    ptrIndicator.style.color = 'var(--text-muted)';
+                    ptrIndicator.style.height = '0px'; ptrIndicator.style.padding = '0px';
+                    ptrText.style.display = 'block'; ptrSpinner.style.display = 'none'; ptrIndicator.style.color = 'var(--text-muted)';
                 }, 1000);
-            } else {
-                ptrIndicator.style.height = '0px';
-                ptrIndicator.style.padding = '0px';
-            }
+            } else { ptrIndicator.style.height = '0px'; ptrIndicator.style.padding = '0px'; }
         });
 
         function closeModal(id) {
             const modal = document.getElementById(id);
             if(!modal) return;
             modal.classList.add('animate-out');
-            setTimeout(() => {
-                modal.classList.remove('animate-out');
-                modal.classList.add('hidden');
-            }, 250); 
+            setTimeout(() => { modal.classList.remove('animate-out'); modal.classList.add('hidden'); }, 250); 
         }
 
         function updateBalanceUI() {
@@ -516,16 +507,12 @@
             if(setBal) setBal.innerHTML = `${coinSvg} ${myUser.coins}`;
             const shopBal = document.getElementById('shop-balance');
             if(shopBal) shopBal.innerText = myUser.coins;
-            
             const viewBal = document.getElementById('view-balance');
-            if(viewBal && viewingUser === myUser.username) {
-                viewBal.innerText = myUser.coins + ' R';
-            }
+            if(viewBal && viewingUser === myUser.username) viewBal.innerText = myUser.coins + ' R';
         }
 
         function handleAvatarUpload(e) {
-            const file = e.target.files[0];
-            if(!file) return;
+            const file = e.target.files[0]; if(!file) return;
             const reader = new FileReader();
             reader.onload = function(event) {
                 const img = new Image();
@@ -536,8 +523,7 @@
                     if (width > height) { if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; } }
                     else { if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; } }
                     canvas.width = width; canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
+                    canvas.getContext('2d').drawImage(img, 0, 0, width, height);
                     selectedAvatarBase64 = canvas.toDataURL('image/jpeg');
                     document.getElementById('settings-avatar-preview').innerHTML = `<img src="${selectedAvatarBase64}">`;
                 }
@@ -549,12 +535,11 @@
         window.onload = function() {
             const shopGrid = document.getElementById('shop-grid');
             Object.keys(GIFTS).forEach(key => {
+                const g = GIFTS[key];
                 const div = document.createElement('div');
-                div.style = "background:var(--bg-main); padding:15px; border-radius:12px; text-align:center; cursor:pointer; border:1px solid var(--border); transition:0.2s;";
-                div.onmouseover = () => div.style.transform = "scale(1.05)";
-                div.onmouseout = () => div.style.transform = "scale(1)";
-                div.innerHTML = `${GIFTS[key].replace('<svg', '<svg style="width:60px;height:60px;filter:drop-shadow(0 5px 5px rgba(0,0,0,0.5));"')}<div style="color:var(--gold); font-weight:bold; margin-top:10px;">${key==='gift_bear'?100:key==='gift_crown'?500:key==='gift_diamond'?50:10} R</div>`;
-                div.onclick = () => buyGift(key, key==='gift_bear'?100:key==='gift_crown'?500:key==='gift_diamond'?50:10);
+                div.className = 'shop-item';
+                div.innerHTML = `${g.svg}<div class="shop-price">${g.price} R</div><div style="font-size:10px; color:${rarityColors[g.rarity]}; margin-top:2px;">${g.rarity}</div>`;
+                div.onclick = () => openItemDetail('shop', key);
                 shopGrid.appendChild(div);
             });
 
@@ -593,9 +578,7 @@
                     myUser = data.user;
                     selectedAvatarBase64 = myUser.avatar;
                     
-                    if (myUser.username === 'revezzz') {
-                        document.getElementById('admin-panel').classList.remove('hidden');
-                    }
+                    if (myUser.username === 'revezzz') document.getElementById('admin-panel').classList.remove('hidden');
 
                     document.getElementById('login-overlay').classList.add('hidden');
                     document.getElementById('app').classList.remove('hidden');
@@ -605,12 +588,7 @@
                     ws.send(JSON.stringify({ type: 'get_chat_list' })); 
                 }
                 
-                if(data.type === 'user_list') { 
-                    allUsers = data.users; 
-                    const tCount = document.getElementById('total-users-count');
-                    if(tCount) tCount.innerText = allUsers.length; 
-                    renderChats(); 
-                }
+                if(data.type === 'user_list') { allUsers = data.users; document.getElementById('total-users-count').innerText = allUsers.length; renderChats(); }
                 if(data.type === 'chat_list') { myContacts = data.contacts; renderChats(); }
                 if(data.type === 'my_groups') { myGroups = data.groups; renderChats(); }
                 
@@ -619,9 +597,8 @@
                     messagesDiv.innerHTML = '';
                     data.messages.forEach(msg => {
                         const isMe = msg.sender === myUser.username;
-                        if (msg.isGift) {
-                            addGiftToScreen(msg.text, isMe ? "Вы" : msg.sender, msg.comment);
-                        } else {
+                        if (msg.isGift) addGiftToScreen(msg.text, isMe ? "Вы" : msg.sender, msg.comment);
+                        else {
                             let senderHtml = (!isMe && currentChatType === 'group') ? `<div class="sender-name">${msg.sender}</div>` : '';
                             let msgHtml = `${senderHtml}${msg.text} <span class="msg-time">${msg.timestamp || ''}</span>`;
                             addMsgToScreen(msgHtml, isMe ? 'my-msg' : 'their-msg', false);
@@ -650,23 +627,12 @@
                     viewingUser = u.username;
                     currentUserBlocked = data.iBlocked;
                     
-                    const vAvatar = document.getElementById('view-avatar');
-                    if(vAvatar) vAvatar.innerHTML = u.avatar ? `<img src="${u.avatar}">` : '👤';
-                    
-                    const vName = document.getElementById('view-name');
-                    if(vName) vName.innerText = u.display_name;
-                    
-                    const vUser = document.getElementById('view-username');
-                    if(vUser) vUser.innerText = '@' + u.username;
-                    
-                    const vBio = document.getElementById('view-bio');
-                    if(vBio) vBio.innerText = u.bio || '';
-                    
-                    const vId = document.getElementById('view-id');
-                    if(vId) vId.innerText = u.six_digit_id;
-                    
-                    const vBal = document.getElementById('view-balance');
-                    if(vBal) vBal.innerText = u.coins + ' R';
+                    document.getElementById('view-avatar').innerHTML = u.avatar ? `<img src="${u.avatar}">` : '👤';
+                    document.getElementById('view-name').innerText = u.display_name;
+                    document.getElementById('view-username').innerText = '@' + u.username;
+                    document.getElementById('view-bio').innerText = u.bio || '';
+                    document.getElementById('view-id').innerText = u.six_digit_id;
+                    document.getElementById('view-balance').innerText = u.coins + ' R';
 
                     if (u.username === myUser.username) {
                         document.getElementById('other-profile-actions').style.display = 'none';
@@ -676,11 +642,12 @@
                         const upGrid = document.getElementById('upgrade-gifts-grid');
                         upGrid.innerHTML = '';
                         Object.keys(GIFTS).forEach(key => {
+                            const g = GIFTS[key];
                             const div = document.createElement('div');
                             div.style = "cursor:pointer; background:var(--bg-main); padding:10px; border-radius:10px; text-align:center; border:1px solid var(--border); flex:1; transition:0.2s;";
-                            div.onmouseover = () => div.style.borderColor = "var(--gold)";
+                            div.onmouseover = () => div.style.borderColor = rarityColors[g.rarity];
                             div.onmouseout = () => div.style.borderColor = "var(--border)";
-                            div.innerHTML = `${GIFTS[key].replace('<svg', '<svg style="width:40px;height:40px;"')}<div style="font-size:10px; margin-top:5px; color:var(--gold); font-weight:bold;">1000 R</div>`;
+                            div.innerHTML = `${g.svg.replace('<svg', '<svg style="width:40px;height:40px;"')}<div style="font-size:10px; margin-top:5px; color:var(--gold); font-weight:bold;">1000 R</div>`;
                             div.onclick = () => openRoulette(key);
                             upGrid.appendChild(div);
                         });
@@ -689,20 +656,12 @@
                         document.getElementById('my-profile-actions').classList.add('hidden');
                         document.getElementById('my-upgrade-section').classList.add('hidden');
                         
-                        if (myUser.username === 'revezzz') {
-                            document.getElementById('admin-give-btn').classList.remove('hidden');
-                        } else {
-                            document.getElementById('admin-give-btn').classList.add('hidden');
-                        }
+                        if (myUser.username === 'revezzz') document.getElementById('admin-give-btn').classList.remove('hidden');
+                        else document.getElementById('admin-give-btn').classList.add('hidden');
 
                         const blockBtn = document.getElementById('block-btn');
-                        if (data.iBlocked) {
-                            blockBtn.innerText = "Разблокировать";
-                            blockBtn.style.background = "var(--online)";
-                        } else {
-                            blockBtn.innerText = "Заблокировать";
-                            blockBtn.style.background = "var(--danger)";
-                        }
+                        if (data.iBlocked) { blockBtn.innerText = "Разблокировать"; blockBtn.style.background = "var(--online)"; }
+                        else { blockBtn.innerText = "Заблокировать"; blockBtn.style.background = "var(--danger)"; }
                     }
                     
                     ws.send(JSON.stringify({ type: 'get_nfts', target: u.username }));
@@ -730,13 +689,11 @@
                 if (data.type === 'nft_upgraded') {
                     const nft = data.nft;
                     const strip = document.getElementById('roulette-strip');
-                    const randomX = -(Math.random() * 2000 + 1000);
-                    strip.style.transform = `translateX(${randomX}px)`;
+                    strip.style.transform = `translateX(${-(Math.random() * 2000 + 1000)}px)`;
                     
                     setTimeout(() => {
                         document.getElementById('roulette-result').classList.remove('hidden');
-                        document.getElementById('result-svg').innerHTML = GIFTS[nft.base_type];
-                        const rarityColors = { 'Common': '#7f91a4', 'Rare': '#5eb5f7', 'Epic': '#db2777', 'Legendary': '#fbbf24' };
+                        document.getElementById('result-svg').innerHTML = GIFTS[nft.base_type].svg;
                         document.getElementById('result-rarity').innerText = `${nft.rarity} #${nft.num}`;
                         document.getElementById('result-rarity').style.color = rarityColors[nft.rarity];
                         myUser.coins = data.newBalance;
@@ -745,69 +702,93 @@
                 }
 
                 if (data.type === 'update_coins') { myUser.coins = data.coins; updateBalanceUI(); }
-                
                 if (data.type === 'profile_saved') {
-                    myUser = data.user;
-                    selectedAvatarBase64 = myUser.avatar;
-                    updateBalanceUI();
-                    alert('Профиль успешно обновлен!');
-                    closeModal('settings-overlay');
+                    myUser = data.user; selectedAvatarBase64 = myUser.avatar; updateBalanceUI();
+                    alert('Профиль успешно обновлен!'); closeModal('settings-overlay');
                 }
-                if (data.type === 'group_created') {
-                    ws.send(JSON.stringify({ type: 'get_groups' }));
-                    closeModal('group-overlay');
-                }
-                if (data.type === 'admin_success') {
-                    alert(data.message); 
-                    openMyProfile(); 
-                }
+                if (data.type === 'group_created') { ws.send(JSON.stringify({ type: 'get_groups' })); closeModal('group-overlay'); }
+                if (data.type === 'admin_success') { alert(data.message); openMyProfile(); }
                 if (data.type === 'error') alert(data.message);
             };
         }
 
         // ==========================================
-        // НОВЫЙ РЕНДЕР NFT КАРТОЧЕК (С ГОЛОГРАММОЙ)
+        // РЕНДЕР NFT КАРТОЧЕК
         // ==========================================
         function renderNftCard(nft, isMarket = false) {
-            const baseSvg = GIFTS[nft.base_type] || GIFTS['gift_bear'];
-            
-            // Цвета для градиента голограммы
-            const rarityGradients = {
-                'Common': 'linear-gradient(45deg, #4B5563, #9CA3AF, #4B5563)',
-                'Rare': 'linear-gradient(45deg, #1E3A8A, #3B82F6, #1E3A8A)',
-                'Epic': 'linear-gradient(45deg, #4C1D95, #8B5CF6, #4C1D95)',
-                'Legendary': 'linear-gradient(45deg, #78350F, #F59E0B, #78350F)'
-            };
-            
+            const baseSvg = GIFTS[nft.base_type] ? GIFTS[nft.base_type].svg : GIFTS['gift_bear'].svg;
             const bgGradient = rarityGradients[nft.rarity] || rarityGradients['Common'];
-            const borderColor = { 'Common': '#9CA3AF', 'Rare': '#3B82F6', 'Epic': '#8B5CF6', 'Legendary': '#F59E0B' }[nft.rarity] || '#fff';
+            const borderColor = rarityColors[nft.rarity] || '#fff';
             
             let buyBtn = '';
-            if (isMarket) {
-                buyBtn = `<button onclick="buyNft('${nft.id}', ${nft.price})" style="width:100%; padding:8px; margin-top:10px; background:var(--gold); color:black; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Купить за ${nft.price} R</button>`;
-            } else {
-                buyBtn = `<button onclick="listNft('${nft.id}')" style="width:100%; padding:8px; margin-top:10px; background:rgba(255,255,255,0.1); color:white; border:1px solid rgba(255,255,255,0.2); border-radius:8px; font-weight:bold; cursor:pointer;">Продать</button>`;
-            }
+            if (isMarket) buyBtn = `<button onclick="event.stopPropagation(); buyNft('${nft.id}', ${nft.price})" style="width:100%; padding:8px; margin-top:10px; background:var(--gold); color:black; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Купить за ${nft.price} R</button>`;
+            else buyBtn = `<button onclick="event.stopPropagation(); listNft('${nft.id}')" style="width:100%; padding:8px; margin-top:10px; background:rgba(255,255,255,0.1); color:white; border:1px solid rgba(255,255,255,0.2); border-radius:8px; font-weight:bold; cursor:pointer;">Продать</button>`;
 
             return `
-                <div class="nft-card" style="border-color: ${borderColor};">
-                    <!-- Голографический фон -->
+                <div class="nft-card" style="border-color: ${borderColor};" onclick="openItemDetail('nft', '${nft.id}', '${nft.base_type}', '${nft.rarity}', ${nft.num}, ${nft.price || 0}, ${isMarket}, '${nft.owner}')">
                     <div class="nft-bg" style="background: ${bgGradient};"></div>
-                    
-                    <!-- Подарок (SVG) -->
                     ${baseSvg}
-                    
-                    <!-- Информация -->
                     <div class="nft-info">
                         <div class="nft-rarity" style="color: ${borderColor};">${nft.rarity}</div>
                         <div class="nft-num">#${nft.num} / 999</div>
-                        ${!isMarket ? `<div class="nft-price-badge">Владелец</div>` : ''}
                         ${buyBtn}
                     </div>
                 </div>
             `;
         }
 
+        // ==========================================
+        // МОДАЛЬНОЕ ОКНО ДЕТАЛЕЙ (ПОДАРОК ИЛИ NFT)
+        // ==========================================
+        function openItemDetail(type, idOrKey, baseType, rarity, num, price, isMarket, owner) {
+            const overlay = document.getElementById('item-detail-overlay');
+            const svgContainer = document.getElementById('detail-svg');
+            const title = document.getElementById('detail-title');
+            const rarityEl = document.getElementById('detail-rarity');
+            const info = document.getElementById('detail-info');
+            const actionBtn = document.getElementById('detail-action-btn');
+
+            if (type === 'shop') {
+                const g = GIFTS[idOrKey];
+                svgContainer.innerHTML = g.svg;
+                title.innerText = g.name;
+                rarityEl.innerText = g.rarity;
+                rarityEl.style.color = rarityColors[g.rarity];
+                info.innerHTML = `Цена: <b style="color:var(--gold)">${g.price} R</b><br><span style="font-size:12px;">Редкость: ${g.rarity}</span>`;
+                
+                actionBtn.style.display = 'block';
+                actionBtn.innerText = `Купить за ${g.price} R`;
+                actionBtn.onclick = () => {
+                    if (!currentChatId) return alert("Выберите чат, чтобы отправить подарок!");
+                    buyGift(idOrKey, g.price);
+                    closeModal('item-detail-overlay');
+                };
+            } else if (type === 'nft') {
+                const baseSvg = GIFTS[baseType] ? GIFTS[baseType].svg : GIFTS['gift_bear'].svg;
+                svgContainer.innerHTML = baseSvg;
+                title.innerText = `${GIFTS[baseType]?.name || 'NFT'} #${num}`;
+                rarityEl.innerText = rarity;
+                rarityEl.style.color = rarityColors[rarity];
+                info.innerHTML = `Владелец: <b>@${owner}</b><br>Коллекция: <b>${num} / 999</b>`;
+                
+                if (isMarket) {
+                    actionBtn.style.display = 'block';
+                    actionBtn.innerText = `Купить за ${price} R`;
+                    actionBtn.onclick = () => {
+                        buyNft(idOrKey, price);
+                        closeModal('item-detail-overlay');
+                    };
+                } else {
+                    actionBtn.style.display = 'none'; // Для своего NFT кнопка "Продать" уже есть на карточке
+                }
+            }
+
+            overlay.classList.remove('hidden', 'animate-out');
+        }
+
+        // ==========================================
+        // ЛОГИКА РУЛЕТКИ
+        // ==========================================
         let currentUpgradeBase = null;
         function openRoulette(baseType) {
             currentUpgradeBase = baseType;
@@ -821,8 +802,8 @@
             for(let i=0; i<50; i++) {
                 const rarities = ['Common', 'Rare', 'Epic', 'Legendary'];
                 const randomR = rarities[Math.floor(Math.random() * rarities.length)];
-                const svg = GIFTS[baseType].replace('<svg', `<svg style="filter: drop-shadow(0 0 10px ${randomR==='Legendary'?'#fbbf24':randomR==='Epic'?'#8B5CF6':'transparent'});"`);
-                strip.innerHTML += `<div class="roulette-item">${svg}</div>`;
+                const g = GIFTS[baseType];
+                strip.innerHTML += `<div class="roulette-item">${g.svg.replace('<svg', `<svg style="filter: drop-shadow(0 0 10px ${rarityColors[randomR]});"`)}</div>`;
             }
         }
 
@@ -831,20 +812,12 @@
             ws.send(JSON.stringify({ type: 'upgrade_to_nft', base_type: currentUpgradeBase, cost: 1000 }));
         }
 
-        function listNft(id) {
-            const price = prompt("Введите цену в R-коинах:", "1000");
-            if(!price || isNaN(price)) return;
-            ws.send(JSON.stringify({ type: 'list_nft', nft_id: id, price: parseInt(price) }));
-            alert("NFT выставлен на продажу!");
-        }
+        function listNft(id) { const p = prompt("Введите цену в R-коинах:", "1000"); if(!p || isNaN(p)) return; ws.send(JSON.stringify({ type: 'list_nft', nft_id: id, price: parseInt(p) })); alert("NFT выставлен на продажу!"); }
+        function buyNft(id, price) { if(confirm(`Купить этот NFT за ${price} R?`)) { ws.send(JSON.stringify({ type: 'buy_nft', nft_id: id })); alert("Покупка успешна!"); } }
 
-        function buyNft(id, price) {
-            if(confirm(`Купить этот NFT за ${price} R?`)) {
-                ws.send(JSON.stringify({ type: 'buy_nft', nft_id: id }));
-                alert("Покупка успешна! NFT добавлен в ваш профиль.");
-            }
-        }
-
+        // ==========================================
+        // ЛОГИКА ЧАТОВ И ПОИСКА
+        // ==========================================
         function renderChats() {
             const list = document.getElementById('chat-list');
             list.innerHTML = '';
@@ -855,12 +828,7 @@
                     const div = document.createElement('div');
                     div.className = 'chat-item';
                     div.onclick = () => openChat('group_' + g.id, 'group', g.name, '');
-                    div.innerHTML = `
-                        <div class="avatar-box" style="background:#5eb5f7; font-size:24px;">👥</div>
-                        <div class="chat-info">
-                            <div class="chat-top"><span class="chat-name">${g.name}</span></div>
-                            <div class="chat-bottom"><span class="chat-msg">Групповой чат</span></div>
-                        </div>`;
+                    div.innerHTML = `<div class="avatar-box" style="background:#5eb5f7; font-size:24px;">👥</div><div class="chat-info"><div class="chat-top"><span class="chat-name">${g.name}</span></div><div class="chat-bottom"><span class="chat-msg">Групповой чат</span></div></div>`;
                     list.appendChild(div);
                 });
 
@@ -871,16 +839,7 @@
                     const avatarHtml = u.avatar ? `<img src="${u.avatar}">` : '👤';
                     const dotClass = u.status === 'online' ? 'online' : 'offline';
                     const unread = unreadMessages[u.username] || 0;
-                    
-                    div.innerHTML = `
-                        <div class="avatar-box">${avatarHtml}<div class="status-dot ${dotClass}"></div></div>
-                        <div class="chat-info">
-                            <div class="chat-top"><span class="chat-name">${u.display_name || u.username}</span></div>
-                            <div class="chat-bottom">
-                                <span class="chat-msg">${u.bio || 'Нажмите, чтобы написать'}</span>
-                                ${unread > 0 ? `<span class="unread-badge">${unread}</span>` : ''}
-                            </div>
-                        </div>`;
+                    div.innerHTML = `<div class="avatar-box">${avatarHtml}<div class="status-dot ${dotClass}"></div></div><div class="chat-info"><div class="chat-top"><span class="chat-name">${u.display_name || u.username}</span></div><div class="chat-bottom"><span class="chat-msg">${u.bio || 'Нажмите, чтобы написать'}</span>${unread > 0 ? `<span class="unread-badge">${unread}</span>` : ''}</div></div>`;
                     list.appendChild(div);
                 });
 
@@ -905,12 +864,7 @@
                     };
                     const avatarHtml = u.avatar ? `<img src="${u.avatar}">` : '👤';
                     const dotClass = u.status === 'online' ? 'online' : 'offline';
-                    div.innerHTML = `
-                        <div class="avatar-box">${avatarHtml}<div class="status-dot ${dotClass}"></div></div>
-                        <div class="chat-info">
-                            <div class="chat-top"><span class="chat-name">${u.display_name || u.username}</span></div>
-                            <div class="chat-bottom"><span class="chat-msg">ID: ${u.six_digit_id}</span></div>
-                        </div>`;
+                    div.innerHTML = `<div class="avatar-box">${avatarHtml}<div class="status-dot ${dotClass}"></div></div><div class="chat-info"><div class="chat-top"><span class="chat-name">${u.display_name || u.username}</span></div><div class="chat-bottom"><span class="chat-msg">ID: ${u.six_digit_id}</span></div></div>`;
                     list.appendChild(div);
                 });
             }
@@ -955,21 +909,14 @@
                 const chatArea = document.getElementById('chat-area');
                 chatArea.classList.add('animate-out');
                 chatArea.classList.remove('active');
-                setTimeout(() => {
-                    chatArea.style.display = 'none';
-                    document.getElementById('sidebar').style.display = 'flex';
-                    currentChatId = null;
-                }, 250);
-            } else {
-                currentChatId = null;
-            }
+                setTimeout(() => { chatArea.style.display = 'none'; document.getElementById('sidebar').style.display = 'flex'; currentChatId = null; }, 250);
+            } else { currentChatId = null; }
         }
 
         function sendMessage() {
             const input = document.getElementById('message-input');
             const text = input.value.trim();
             if (!text || !currentChatId) return;
-
             if (currentChatType === 'user') {
                 ws.send(JSON.stringify({ type: 'private', from: myUser.username, to: currentChatId, text: text }));
                 if (!myContacts.includes(currentChatId)) myContacts.push(currentChatId);
@@ -993,32 +940,16 @@
         }
 
         function addGiftToScreen(giftId, senderName, comment) {
+            const g = GIFTS[giftId] || { svg: giftId };
             const div = document.createElement('div');
             div.className = 'gift-event';
-            let wishText = (comment && comment !== 'undefined') ? `«${comment}»` : '';
-            let svgHtml = GIFTS[giftId] || giftId;
-
-            div.innerHTML = `
-                ${svgHtml}
-                <div class="gift-text">
-                    ${senderName} дарит подарок!
-                    ${wishText ? `<br>${wishText}` : ''}
-                </div>
-            `;
+            div.innerHTML = `${g.svg}<div class="gift-text">${senderName} дарит подарок!<br>«${comment}»</div>`;
             document.getElementById('messages').appendChild(div);
             document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
         }
 
-        function openUserProfile(username) {
-            if(!username || currentChatType === 'group') return;
-            ws.send(JSON.stringify({ type: 'get_profile', target: username }));
-        }
-
-        function openMyProfile() {
-            if (!myUser) return alert('Вы не авторизованы.');
-            if (!ws || ws.readyState !== WebSocket.OPEN) return alert('Соединение с сервером потеряно.');
-            ws.send(JSON.stringify({ type: 'get_profile', target: myUser.username }));
-        }
+        function openUserProfile(username) { if(!username || currentChatType === 'group') return; ws.send(JSON.stringify({ type: 'get_profile', target: username })); }
+        function openMyProfile() { if (!ws || ws.readyState !== WebSocket.OPEN) return alert('Нет соединения'); ws.send(JSON.stringify({ type: 'get_profile', target: myUser.username })); }
 
         function openSettings() {
             closeModal('profile-view-overlay'); 
@@ -1028,105 +959,43 @@
             document.getElementById('settings-avatar-preview').innerHTML = myUser.avatar ? `<img src="${myUser.avatar}">` : '👤';
             selectedAvatarBase64 = myUser.avatar || '';
             updateBalanceUI(); 
-            document.getElementById('redeem-msg').innerText = ''; 
             document.getElementById('settings-overlay').classList.remove('hidden', 'animate-out');
         }
 
         function saveProfile() {
-            ws.send(JSON.stringify({
-                type: 'update_profile',
-                display_name: document.getElementById('settings-display-name').value.trim(),
-                six_digit_id: document.getElementById('settings-six-id').value.trim(),
-                bio: document.getElementById('settings-bio').value.trim(),
-                avatar: selectedAvatarBase64,
-                status: 'online'
-            }));
+            ws.send(JSON.stringify({ type: 'update_profile', display_name: document.getElementById('settings-display-name').value.trim(), six_digit_id: document.getElementById('settings-six-id').value.trim(), bio: document.getElementById('settings-bio').value.trim(), avatar: selectedAvatarBase64, status: 'online' }));
         }
 
         function openCreateGroup() {
             const list = document.getElementById('group-members-list');
-            list.innerHTML = allUsers.filter(u => u.username !== myUser.username).map(u => `
-                <label style="display:flex; padding:10px; border-bottom:1px solid var(--border); align-items:center; cursor:pointer;">
-                    <input type="checkbox" value="${u.username}" style="width:20px; margin-right:10px;">
-                    ${u.display_name}
-                </label>
-            `).join('');
+            list.innerHTML = allUsers.filter(u => u.username !== myUser.username).map(u => `<label style="display:flex; padding:10px; border-bottom:1px solid var(--border); align-items:center; cursor:pointer;"><input type="checkbox" value="${u.username}" style="width:20px; margin-right:10px;">${u.display_name}</label>`).join('');
             document.getElementById('group-overlay').classList.remove('hidden', 'animate-out');
         }
 
         function createGroup() {
             const name = document.getElementById('group-name').value.trim();
-            if(!name) return alert("Введите название группы!");
+            if(!name) return alert("Введите название!");
             const members = Array.from(document.querySelectorAll('#group-members-list input:checked')).map(cb => cb.value);
             ws.send(JSON.stringify({ type: 'create_group', name: name, members: members }));
         }
 
-        function openMarket() {
-            ws.send(JSON.stringify({ type: 'get_marketplace' }));
-            document.getElementById('market-overlay').classList.remove('hidden', 'animate-out');
-        }
-
-        function openShop() { 
-            if(currentChatId && currentChatType==='user') {
-                updateBalanceUI();
-                document.getElementById('shop-overlay').classList.remove('hidden', 'animate-out'); 
-            }
-        }
-        
+        function openMarket() { ws.send(JSON.stringify({ type: 'get_marketplace' })); document.getElementById('market-overlay').classList.remove('hidden', 'animate-out'); }
+        function openShop() { if(currentChatId && currentChatType==='user') { updateBalanceUI(); document.getElementById('shop-overlay').classList.remove('hidden', 'animate-out'); } }
         function buyGift(giftId, price) {
+            const g = GIFTS[giftId];
             const comment = prompt("Пожелание к подарку:", "Спасибо!");
             if(comment === null) return;
             ws.send(JSON.stringify({ type: 'private', from: myUser.username, to: currentChatId, text: giftId, isGift: true, giftPrice: price, comment: comment }));
             addGiftToScreen(giftId, "Вы", comment);
             closeModal('shop-overlay');
         }
-        
-        function toggleBlock() {
-            if (!viewingUser) return;
-            if (currentUserBlocked) {
-                ws.send(JSON.stringify({ type: 'unblock_user', target: viewingUser }));
-            } else {
-                if(confirm('Вы уверены, что хотите заблокировать пользователя?')) {
-                    ws.send(JSON.stringify({ type: 'block_user', target: viewingUser }));
-                }
-            }
-        }
 
-        function deleteChat() {
-            if (!viewingUser) return;
-            if(confirm('Удалить чат? История сообщений будет стерта.')) {
-                ws.send(JSON.stringify({ type: 'delete_chat', target: viewingUser }));
-            }
-        }
-
-        function adminGiveSelfCoins() {
-            if(!myUser || myUser.username !== 'revezzz') return alert('Вы не админ!');
-            if (!ws || ws.readyState !== WebSocket.OPEN) return alert('Соединение с сервером потеряно!');
-            ws.send(JSON.stringify({ type: 'admin_give_coins', target: myUser.username, amount: 10000 }));
-        }
-
-        function adminGiveCoins() {
-            if(!viewingUser || myUser.username !== 'revezzz') return alert('Вы не админ!');
-            const amount = prompt(`Сколько R-коинов начислить пользователю ${viewingUser}?`, "100");
-            if(!amount || isNaN(amount)) return;
-            ws.send(JSON.stringify({ type: 'admin_give_coins', target: viewingUser, amount: parseInt(amount) }));
-        }
-
-        function redeemPromo() {
-            const code = document.getElementById('redeem-code-input').value.trim();
-            if(!code) return;
-            ws.send(JSON.stringify({ type: 'redeem_promo', code: code }));
-        }
-
-        function createPromo() {
-            const code = document.getElementById('promo-code-input').value.trim();
-            const reward = parseInt(document.getElementById('promo-reward-input').value);
-            const limit = parseInt(document.getElementById('promo-limit-input').value);
-            
-            if(!code || !reward || !limit) return alert("Заполните все поля (название, награда, лимит)!");
-            ws.send(JSON.stringify({ type: 'create_promo', code: code, reward: reward, max_uses: limit }));
-            document.getElementById('promo-code-input').value = '';
-        }
+        function toggleBlock() { if (!viewingUser) return; if (currentUserBlocked) ws.send(JSON.stringify({ type: 'unblock_user', target: viewingUser })); else { if(confirm('Заблокировать?')) ws.send(JSON.stringify({ type: 'block_user', target: viewingUser })); } }
+        function deleteChat() { if (!viewingUser) return; if(confirm('Удалить чат?')) ws.send(JSON.stringify({ type: 'delete_chat', target: viewingUser })); }
+        function adminGiveSelfCoins() { if(myUser.username !== 'revezzz') return; ws.send(JSON.stringify({ type: 'admin_give_coins', target: myUser.username, amount: 10000 })); }
+        function adminGiveCoins() { if(myUser.username !== 'revezzz') return; const amt = prompt("Сколько?", "100"); if(amt) ws.send(JSON.stringify({ type: 'admin_give_coins', target: viewingUser, amount: parseInt(amt) })); }
+        function redeemPromo() { const code = document.getElementById('redeem-code-input').value.trim(); if(code) ws.send(JSON.stringify({ type: 'redeem_promo', code: code })); }
+        function createPromo() { const c = document.getElementById('promo-code-input').value.trim(); const r = parseInt(document.getElementById('promo-reward-input').value); const l = parseInt(document.getElementById('promo-limit-input').value); if(c && r && l) ws.send(JSON.stringify({ type: 'create_promo', code: c, reward: r, max_uses: l })); }
     </script>
 </body>
 </html>
