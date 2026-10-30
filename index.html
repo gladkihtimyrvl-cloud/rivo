@@ -141,7 +141,8 @@
             <h2>Rivo</h2>
             <input type="text" id="auth-username" placeholder="Юзернейм">
             <input type="password" id="auth-password" placeholder="Пароль">
-            <button onclick="submitAuth()">Войти</button>
+            <!-- ИЗМЕНЕНИЕ: Добавлен id="main-auth-btn" -->
+            <button id="main-auth-btn" onclick="submitAuth()">Войти</button>
             <div style="text-align:center; color:var(--accent); cursor:pointer; margin-top:15px;" id="switch-text" onclick="toggleAuthMode()">Нет аккаунта? Зарегистрироваться</div>
             <div id="auth-error" style="color: #ef4444; margin-top: 10px; text-align: center;"></div>
         </div>
