@@ -12,7 +12,7 @@ const wss = new WebSocket.Server({ server });
 
 const db = new sqlite3.Database('./database.db');
 
-// КАТАЛОГ ПОДАРКОВ
+// КАТАЛОГ ПОДАРКОВ (Цены и лимиты)
 const GIFT_CATALOG = {
     'gift_rose': { name: 'Роза', price: 100, rarity: 'Common', max_supply: 10000 },
     'gift_bear': { name: 'Плюшевый Мишка', price: 1000, rarity: 'Uncommon', max_supply: 5000 },
@@ -21,7 +21,7 @@ const GIFT_CATALOG = {
     'gift_pepe': { name: 'Plush Pepe', price: 100000, rarity: 'Legendary', max_supply: 10 }
 };
 
-// ХАРАКТЕРИСТИКИ ДЛЯ ГЕНЕРАЦИИ
+// ХАРАКТЕРИСТИКИ ДЛЯ ГЕНЕРАЦИИ NFT
 const TRAITS = {
     backgrounds: [
         { name: 'Cosmic', weight: 5, color: '#1E1B4B' }, { name: 'Starry', weight: 10, color: '#0F172A' },
@@ -44,6 +44,7 @@ const TRAITS = {
 };
 
 db.serialize(() => {
+    // ТАБЛИЦЫ ИЗ СТАРОГО ПРОЕКТА
     db.run(`CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE, display_name TEXT,
         six_digit_id TEXT UNIQUE, password TEXT, status TEXT DEFAULT 'online', 
@@ -56,7 +57,7 @@ db.serialize(() => {
     db.run(`CREATE TABLE IF NOT EXISTS blocks (blocker TEXT, blocked TEXT, PRIMARY KEY (blocker, blocked))`);
     db.run(`CREATE TABLE IF NOT EXISTS promo_history (username TEXT, code TEXT, PRIMARY KEY (username, code))`);
     
-    // НОВЫЕ ТАБЛИЦЫ
+    // НОВЫЕ ТАБЛИЦЫ ДЛЯ ПОДАРКОВ И NFT
     db.run(`CREATE TABLE IF NOT EXISTS inventory (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT,
@@ -77,16 +78,6 @@ db.serialize(() => {
         is_listed INTEGER DEFAULT 0,
         price INTEGER DEFAULT 0
     )`);
-
-    db.run(`CREATE TABLE IF NOT EXISTS transactions (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        type TEXT,
-        nft_id TEXT,
-        from_user TEXT,
-        to_user TEXT,
-        price INTEGER,
-        timestamp TEXT
-    )`);
 });
 
 const clients = new Map(); 
@@ -96,6 +87,7 @@ wss.on('connection', function connection(ws) {
         try {
             const data = JSON.parse(message);
 
+            // СТАРАЯ ЛОГИКА АВТОРИЗАЦИИ
             if (data.type === 'register') {
                 const cleanUsername = data.username.trim(); 
                 db.get(`SELECT username FROM users WHERE username = ?`, [cleanUsername], (err, row) => {
@@ -154,8 +146,8 @@ wss.on('connection', function connection(ws) {
                 db.get(`SELECT coins FROM users WHERE username = ?`, [ws.username], (err, user) => {
                     if (user.coins < gift.price) return ws.send(JSON.stringify({ type: 'error', message: 'Недостаточно R-коинов!' }));
                     
-                    // Проверка лимита (считаем сколько в инвентаре + сколько уже улучшено в NFT)
-                    db.get(`SELECT SUM(quantity) as inv_count FROM inventory WHERE gift_id = ?`, [gift.id || data.gift_id], (e, inv) => {
+                    // Проверка лимита
+                    db.get(`SELECT SUM(quantity) as inv_count FROM inventory WHERE gift_id = ?`, [data.gift_id], (e, inv) => {
                         db.get(`SELECT COUNT(*) as nft_count FROM nfts WHERE base_type = ?`, [data.gift_id], (e2, nftData) => {
                             const totalIssued = (inv ? inv.inv_count || 0 : 0) + (nftData ? nftData.nft_count : 0);
                             if (totalIssued >= gift.max_supply) return ws.send(JSON.stringify({ type: 'error', message: 'Лимит тиража исчерпан!' }));
@@ -180,7 +172,6 @@ wss.on('connection', function connection(ws) {
                 db.get(`SELECT quantity FROM inventory WHERE username = ? AND gift_id = ?`, [ws.username, baseGiftId], (err, inv) => {
                     if (!inv || inv.quantity < 1) return ws.send(JSON.stringify({ type: 'error', message: 'У вас нет этого подарка!' }));
 
-                    // Генерация характеристик на сервере
                     const getRandomTrait = (traitList) => {
                         let totalWeight = traitList.reduce((sum, t) => sum + t.weight, 0);
                         let random = Math.random() * totalWeight;
@@ -195,7 +186,6 @@ wss.on('connection', function connection(ws) {
                     const pat = getRandomTrait(TRAITS.patterns);
                     const col = getRandomTrait(TRAITS.colors);
 
-                    // Определение редкости на основе весов
                     let rarityScore = bg.weight + pat.weight + col.weight;
                     let rarity = 'Common';
                     if (rarityScore > 80) rarity = 'Legendary';
@@ -250,13 +240,11 @@ wss.on('connection', function connection(ws) {
                         db.run(`UPDATE users SET coins = coins - ? WHERE username = ?`, [nft.price, ws.username]);
                         db.run(`UPDATE users SET coins = coins + ? WHERE username = ?`, [nft.price, nft.owner]);
                         db.run(`UPDATE nfts SET owner = ?, is_listed = 0, price = 0 WHERE id = ?`, [ws.username, data.nft_id]);
-                        db.run(`INSERT INTO transactions (type, nft_id, from_user, to_user, price, timestamp) VALUES (?, ?, ?, ?, ?, ?)`, 
-                        ['sale', data.nft_id, nft.owner, ws.username, nft.price, new Date().toLocaleString()]);
                         db.run(`COMMIT`);
 
                         ws.send(JSON.stringify({ type: 'nft_bought', success: true }));
                         const sellerSocket = clients.get(nft.owner);
-                        if(sellerSocket) sellerSocket.send(JSON.stringify({ type: 'update_coins_force' })); // Просто триггер обновления
+                        if(sellerSocket) sellerSocket.send(JSON.stringify({ type: 'update_coins_force' }));
                         broadcastMarketplace();
                     });
                 });
@@ -268,7 +256,7 @@ wss.on('connection', function connection(ws) {
                 });
             }
 
-            // Остальные функции (чаты, промокоды) остались без изменений
+            // СТАРАЯ ЛОГИКА ЧАТОВ И ГРУПП
             if (data.type === 'get_chat_list') {
                 db.all(`SELECT DISTINCT CASE WHEN sender = ? THEN receiver ELSE sender END as contact FROM messages WHERE (sender = ? OR receiver = ?) AND receiver NOT LIKE 'group_%'`, [ws.username, ws.username, ws.username], (err, rows) => {
                     if (!err) ws.send(JSON.stringify({ type: 'chat_list', contacts: rows.map(r => r.contact) }));
@@ -318,6 +306,8 @@ wss.on('connection', function connection(ws) {
                     });
                 });
             }
+            
+            // СТАРАЯ ЛОГИКА ОТПРАВКИ ПОДАРКОВ В ЧАТ
             if (data.type === 'private' && data.isGift) {
                 db.get(`SELECT coins FROM users WHERE username = ?`, [ws.username], (err, row) => {
                     if (row.coins < data.giftPrice) return ws.send(JSON.stringify({ type: 'error', message: 'Недостаточно R-коинов!' }));
@@ -330,6 +320,24 @@ wss.on('connection', function connection(ws) {
                     });
                 });
             }
+            
+            if (data.type === 'block_user') {
+                db.run(`INSERT OR IGNORE INTO blocks (blocker, blocked) VALUES (?, ?)`, [ws.username, data.target], () => {
+                    ws.send(JSON.stringify({ type: 'action_success', action: 'block', target: data.target }));
+                });
+            }
+            if (data.type === 'unblock_user') {
+                db.run(`DELETE FROM blocks WHERE blocker = ? AND blocked = ?`, [ws.username, data.target], () => {
+                    ws.send(JSON.stringify({ type: 'action_success', action: 'unblock', target: data.target }));
+                });
+            }
+            if (data.type === 'delete_chat') {
+                db.run(`DELETE FROM messages WHERE (sender = ? AND receiver = ?) OR (sender = ? AND receiver = ?)`, [ws.username, data.target, data.target, ws.username], () => {
+                    ws.send(JSON.stringify({ type: 'chat_deleted', target: data.target }));
+                });
+            }
+
+            // СТАРАЯ ЛОГИКА АДМИНА И ПРОМОКОДОВ
             if (data.type === 'admin_give_coins') {
                 if (ws.username !== 'revezzz') return ws.send(JSON.stringify({ type: 'error', message: 'Нет прав!' }));
                 db.run(`UPDATE users SET coins = coins + ? WHERE username = ?`, [data.amount, data.target], () => {
@@ -399,4 +407,4 @@ function broadcastMarketplace() {
 }
 
 const PORT = process.env.PORT || 8080;
-server.listen(PORT, () => console.log(`Rivo Server запущен на порту ${PORT}`)); 
+server.listen(PORT, () => console.log(`Rivo Server запущен на порту ${PORT}`));
