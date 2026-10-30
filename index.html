@@ -89,12 +89,11 @@
         .tg-avatar img { width: 100%; height: 100%; object-fit: cover; }
         .tg-badges { display: flex; justify-content: center; gap: 5px; margin-bottom: 10px; z-index: 2; position: relative; }
         .tg-badge { width: 24px; height: 24px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 12px; color: white; }
-        
         .tg-info-block { background: rgba(0,0,0,0.2); border-radius: 12px; padding: 12px 15px; margin: 10px 15px; text-align: left; border: 1px solid rgba(255,255,255,0.05); }
         .tg-info-label { color: var(--accent); font-size: 12px; font-weight: 600; margin-bottom: 2px; }
         .tg-info-value { color: white; font-size: 15px; }
 
-        /* Карточки подарков и NFT */
+        /* Сетки карточек */
         .grid-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
         .gift-card, .nft-card { 
             border-radius: 12px; padding: 10px; text-align: center; position: relative; 
@@ -105,7 +104,6 @@
         }
         .gift-card:hover, .nft-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.7); }
         
-        /* Визуализация NFT */
         .nft-visual { width: 80px; height: 80px; position: relative; border-radius: 10px; overflow: hidden; margin-bottom: 8px; display: flex; justify-content: center; align-items: center; }
         .nft-bg-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; }
         .nft-pattern-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; opacity: 0.5; }
@@ -243,9 +241,7 @@
             <h2>Улучшить до NFT</h2>
             <p style="text-align:center; color:var(--text-muted); font-size:14px;">Стоимость: <b style="color:var(--gold);">Бесплатно (1 шт)</b></p>
             
-            <div id="upgrade-preview" style="text-align:center; margin: 20px 0;">
-                <!-- Иконка подарка -->
-            </div>
+            <div id="upgrade-preview" style="text-align:center; margin: 20px 0;"></div>
 
             <div id="roulette-result" class="hidden" style="text-align:center; margin-bottom:20px;">
                 <div id="result-svg" style="width:100px; height:100px; margin:0 auto;"></div>
@@ -285,10 +281,25 @@
             <div id="admin-panel" class="hidden" style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 15px;">
                 <h3 style="text-align:center; color: var(--gold);">Панель создателя</h3>
                 <button onclick="adminGiveSelfCoins()" style="background:var(--gold); color:black;">Начислить себе 10 000 R</button>
+                <input type="text" id="promo-code-input" placeholder="Промокод (напр. RIVO100)" style="margin-top:10px;">
+                <input type="number" id="promo-reward-input" placeholder="Награда (коины)" value="50">
+                <button onclick="createPromo()" style="background:var(--gold); color:black;">Создать промокод</button>
             </div>
 
             <button onclick="logout()" style="background:var(--danger); margin-top: 20px;">Выйти</button>
             <button onclick="closeModal('settings-overlay')" style="background:transparent; border:1px solid var(--border);">Отмена</button>
+        </div>
+    </div>
+
+    <!-- ГРУППЫ -->
+    <div id="group-overlay" class="modal-overlay hidden">
+        <div class="modal-box">
+            <h2>Новая группа</h2>
+            <input type="text" id="group-name" placeholder="Название группы">
+            <div style="font-size:12px; color:var(--text-muted); margin-bottom:5px;">Выберите участников:</div>
+            <div id="group-members-list" style="max-height:150px; overflow-y:auto; margin-bottom:15px; border:1px solid var(--border); border-radius:8px;"></div>
+            <button onclick="createGroup()">Создать</button>
+            <button onclick="closeModal('group-overlay')" style="background:transparent; border:1px solid var(--border);">Отмена</button>
         </div>
     </div>
 
@@ -340,13 +351,11 @@
         
         const rarityColors = { 'Common': '#9CA3AF', 'Uncommon': '#10B981', 'Rare': '#3B82F6', 'Epic': '#8B5CF6', 'Legendary': '#F59E0B' };
         
-        // Цвета фонов для NFT
         const bgColors = {
             'Cosmic': '#1E1B4B', 'Starry': '#0F172A', 'Electric Purple': '#4C1D95', 
             'Grape': '#3B0764', 'Golden': '#78350F', 'Fire': '#7F1D1D', 'Ice': '#164E63', 'Rainbow': '#831843'
         };
         
-        // CSS Узоры
         const patternCSS = {
             'None': 'none', 'Stars': 'radial-gradient(circle, white 10%, transparent 11%)',
             'Waves': 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.1) 10px, rgba(255,255,255,0.1) 20px)',
@@ -493,7 +502,6 @@
                 if (data.type === 'gift_bought') { myUser.coins = data.newBalance; updateBalanceUI(); alert("Подарок куплен! Он в вашем профиле."); closeModal('shop-overlay'); }
                 
                 if (data.type === 'nft_upgraded') {
-                    myUser.coins -= 0; // deduct not needed here, server handles
                     document.getElementById('roulette-result').classList.remove('hidden');
                     document.getElementById('result-rarity').innerText = `${data.nft.rarity} #${data.nft.num}`;
                     document.getElementById('result-rarity').style.color = rarityColors[data.nft.rarity];
@@ -501,10 +509,7 @@
                 }
 
                 if (data.type === 'update_coins') { myUser.coins = data.coins; updateBalanceUI(); }
-                if (data.type === 'update_coins_force') { 
-                    // Просто запрашиваем профиль заново, если продали NFT
-                    if(viewingUser === myUser.username) openMyProfile();
-                }
+                if (data.type === 'update_coins_force') { if(viewingUser === myUser.username) openMyProfile(); }
                 if (data.type === 'profile_saved') { myUser = data.user; updateBalanceUI(); alert('Сохранено!'); closeModal('settings-overlay'); }
                 if (data.type === 'admin_success') { alert(data.message); openMyProfile(); }
                 if (data.type === 'error') alert(data.message);
@@ -537,13 +542,23 @@
                     const md = document.getElementById('messages'); md.innerHTML = '';
                     data.messages.forEach(m => {
                         const isMe = m.sender === myUser.username;
-                        md.innerHTML += `<div class="msg-bubble ${isMe?'my-msg':'their-msg'}">${m.text} <span class="msg-time">${m.timestamp||''}</span></div>`;
+                        if (m.isGift) {
+                            md.innerHTML += `<div class="msg-bubble ${isMe?'my-msg':'their-msg'}" style="text-align:center; font-size:40px; background:transparent;">${m.text}<div style="font-size:12px; color:white; background:rgba(0,0,0,0.5); border-radius:10px; padding:5px;">${m.comment}</div></div>`;
+                        } else {
+                            md.innerHTML += `<div class="msg-bubble ${isMe?'my-msg':'their-msg'}">${m.text} <span class="msg-time">${m.timestamp||''}</span></div>`;
+                        }
                     });
                     md.scrollTop = md.scrollHeight;
                 }
                 if (data.type === 'private' || data.type === 'group_message') {
                     const cid = data.type === 'private' ? data.from : 'group_' + data.groupId;
-                    if (currentChatId === cid) document.getElementById('messages').innerHTML += `<div class="msg-bubble their-msg">${data.text} <span class="msg-time">${data.time}</span></div>`;
+                    if (currentChatId === cid) {
+                        if (data.isGift) {
+                            document.getElementById('messages').innerHTML += `<div class="msg-bubble their-msg" style="text-align:center; font-size:40px; background:transparent;">${data.text}<div style="font-size:12px; color:white; background:rgba(0,0,0,0.5); border-radius:10px; padding:5px;">${data.comment}</div></div>`;
+                        } else {
+                            document.getElementById('messages').innerHTML += `<div class="msg-bubble their-msg">${data.text} <span class="msg-time">${data.time}</span></div>`;
+                        }
+                    }
                 }
             };
         }
@@ -636,6 +651,7 @@
         function openMyProfile() { ws.send(JSON.stringify({ type: 'get_profile', target: myUser.username })); }
         function openMarket() { ws.send(JSON.stringify({ type: 'get_marketplace' })); }
         function openShop() { if(currentChatId) document.getElementById('shop-overlay').classList.remove('hidden', 'animate-out'); }
+        
         function openSettings() {
             closeModal('profile-view-overlay');
             document.getElementById('settings-display-name').value = myUser.display_name;
@@ -644,8 +660,66 @@
             document.getElementById('settings-overlay').classList.remove('hidden', 'animate-out');
         }
         function saveProfile() { ws.send(JSON.stringify({ type: 'update_profile', display_name: document.getElementById('settings-display-name').value.trim(), six_digit_id: document.getElementById('settings-six-id').value.trim(), bio: document.getElementById('settings-bio').value.trim(), avatar: selectedAvatarBase64, status: 'online' })); }
+        
         function adminGiveSelfCoins() { ws.send(JSON.stringify({ type: 'admin_give_coins', target: myUser.username, amount: 100000 })); }
+        function adminGiveCoins() { const p = prompt("Сколько?", "1000"); if(p) ws.send(JSON.stringify({ type: 'admin_give_coins', target: viewingUser, amount: parseInt(p) })); }
         function redeemPromo() { const c = document.getElementById('redeem-code-input').value.trim(); if(c) ws.send(JSON.stringify({ type: 'redeem_promo', code: c })); }
+        function createPromo() { const c = document.getElementById('promo-code-input').value.trim(); const r = parseInt(document.getElementById('promo-reward-input').value); if(c && r) ws.send(JSON.stringify({ type: 'create_promo', code: c, reward: r, max_uses: 10 })); }
+
+        // ФУНКЦИИ ОТПРАВКИ ПОДАРКА В ЧАТ
+        function sendGiftToChat(giftId, price) {
+            const comment = prompt("Пожелание к подарку:", "Спасибо!");
+            if(comment === null) return;
+            ws.send(JSON.stringify({ type: 'private', from: myUser.username, to: currentChatId, text: GIFT_CATALOG[giftId].emoji, isGift: true, giftPrice: price, comment: comment }));
+            closeModal('shop-overlay');
+        }
+
+        function toggleBlock() { if (!viewingUser) return; if (confirm('Заблокировать?')) ws.send(JSON.stringify({ type: 'block_user', target: viewingUser })); }
+        function deleteChat() { if (!viewingUser) return; if(confirm('Удалить чат?')) ws.send(JSON.stringify({ type: 'delete_chat', target: viewingUser })); }
+        
+        // МОДАЛКА ПОКУПКИ (Выбор между инвентарем и отправкой в чат)
+        function openItemDetail(type, idOrKey) {
+            const overlay = document.getElementById('item-detail-overlay');
+            const svgContainer = document.getElementById('detail-visual');
+            const title = document.getElementById('detail-title');
+            const rarityEl = document.getElementById('detail-rarity');
+            const info = document.getElementById('detail-info');
+            const actionBtn = document.getElementById('detail-action-btn');
+            const actionBtn2 = document.createElement('button'); // Добавим вторую кнопку для чата
+
+            // Очистка старых кнопок
+            const existingBtn2 = document.getElementById('detail-action-btn-2');
+            if(existingBtn2) existingBtn2.remove();
+
+            if (type === 'shop') {
+                const g = GIFT_CATALOG[idOrKey];
+                svgContainer.innerHTML = `<div style="font-size:80px;">${g.emoji}</div>`;
+                title.innerText = g.name;
+                rarityEl.innerText = g.rarity;
+                rarityEl.style.color = rarityColors[g.rarity];
+                info.innerHTML = `Цена: <b style="color:var(--gold)">${g.price} R</b><br><span style="font-size:12px;">Редкость: ${g.rarity}</span>`;
+                
+                actionBtn.style.display = 'block';
+                actionBtn.innerText = `Купить в инвентарь за ${g.price} R`;
+                actionBtn.onclick = () => {
+                    buyGift(idOrKey, g.price);
+                    closeModal('item-detail-overlay');
+                };
+
+                // Вторая кнопка для отправки в чат
+                actionBtn2.id = 'detail-action-btn-2';
+                actionBtn2.style = "background: var(--accent); width: 100%; padding: 12px; border-radius: 8px; border: none; color: white; font-weight: 600; cursor: pointer; margin-top: 10px;";
+                actionBtn2.innerText = `Отправить в чат за ${g.price} R`;
+                actionBtn2.onclick = () => {
+                    if (!currentChatId) return alert("Выберите чат!");
+                    sendGiftToChat(idOrKey, g.price);
+                    closeModal('item-detail-overlay');
+                };
+                document.querySelector('#item-detail-overlay .modal-box').appendChild(actionBtn2);
+            }
+
+            overlay.classList.remove('hidden', 'animate-out');
+        }
     </script>
 </body>
 </html>
