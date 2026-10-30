@@ -36,6 +36,18 @@
         @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes slideOutRight { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
         @keyframes spin { 100% { transform: rotate(360deg); } }
+        
+        /* НОВЫЕ АНИМАЦИИ ДЛЯ NFT */
+        @keyframes holoShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        @keyframes floatGift {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(2deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
+        }
 
         /* ЛЕВАЯ ПАНЕЛЬ */
         #sidebar { width: 340px; background: var(--bg-panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 2; position: relative; }
@@ -103,22 +115,52 @@
         .badge { width: 24px; height: 24px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 12px; color: white; }
         .profile-balance { background: rgba(251, 191, 36, 0.1); border: 1px solid var(--gold); padding: 12px 15px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; font-weight: bold; color: var(--gold); }
 
-        /* NFT СЕТКА */
-        .nft-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; }
-        .nft-card { background: rgba(0,0,0,0.4); border-radius: 12px; padding: 10px; text-align: center; border: 1px solid rgba(255,255,255,0.1); position: relative; overflow: hidden; transition: 0.2s; cursor: pointer; }
-        .nft-card:hover { transform: translateY(-3px); border-color: var(--gold); }
-        .nft-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.3; z-index: 0; }
-        .nft-card svg { width: 50px; height: 50px; position: relative; z-index: 1; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5)); }
-        .nft-info { position: relative; z-index: 1; margin-top: 5px; }
-        .nft-rarity { font-size: 9px; font-weight: bold; text-transform: uppercase; }
-        .nft-num { font-size: 10px; color: white; }
+        /* ========================================= */
+        /* НОВЫЙ ДИЗАЙН NFT КАРТОЧЕК (КАК В SLASHER) */
+        /* ========================================= */
+        .nft-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 15px; }
+        
+        .nft-card { 
+            border-radius: 16px; padding: 15px; text-align: center; 
+            position: relative; overflow: hidden; transition: 0.3s; cursor: pointer; 
+            background: #1e293b; /* Темный фон карточки */
+            border: 2px solid rgba(255,255,255,0.1);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5), inset 0 0 20px rgba(0,0,0,0.5);
+        }
+        
+        .nft-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.7); }
+
+        /* Голографический фон для NFT */
+        .nft-bg { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            z-index: 0; opacity: 0.4; 
+            background-size: 200% 200%;
+            animation: holoShift 5s infinite alternate;
+        }
+
+        .nft-card svg { 
+            width: 80px; height: 80px; position: relative; z-index: 1; 
+            filter: drop-shadow(0 15px 15px rgba(0,0,0,0.6)); /* Объемная тень */
+            transition: 0.3s;
+        }
+        .nft-card:hover svg { transform: scale(1.1); }
+
+        .nft-info { position: relative; z-index: 1; margin-top: 10px; }
+        .nft-rarity { font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        .nft-num { font-size: 12px; color: white; font-weight: bold; margin-top: 2px; }
+        .nft-price-badge { background: rgba(0,0,0,0.6); color: var(--gold); padding: 2px 8px; border-radius: 10px; font-size: 12px; display: inline-block; margin-top: 5px; }
+
+        /* ВЫВОД ПОДАРКА В ЧАТЕ */
+        .gift-event { align-self: center; display: flex; flex-direction: column; align-items: center; margin: 20px 0; animation: modalFadeIn 0.5s ease; }
+        .gift-event svg { width: 120px; height: 120px; animation: floatGift 3s ease-in-out infinite; filter: drop-shadow(0 20px 20px rgba(0,0,0,0.7)); }
+        .gift-text { background: rgba(0,0,0,0.7); padding: 10px 20px; border-radius: 20px; margin-top: 15px; display: inline-block; font-size: 15px; color: #fff; border: 1px solid var(--gold); backdrop-filter: blur(5px); text-align: center; max-width: 250px; line-height: 1.4; }
 
         /* РУЛЕТКА */
-        .roulette-container { width: 100%; height: 100px; background: var(--bg-main); border-radius: 10px; overflow: hidden; position: relative; border: 2px solid var(--gold); display: flex; align-items: center; margin-bottom: 20px; }
+        .roulette-container { width: 100%; height: 120px; background: var(--bg-main); border-radius: 10px; overflow: hidden; position: relative; border: 2px solid var(--gold); display: flex; align-items: center; margin-bottom: 20px; box-shadow: inset 0 0 20px rgba(0,0,0,0.8); }
         .roulette-strip { display: flex; height: 100%; transition: transform 3s cubic-bezier(0.1, 0.7, 0.1, 1); }
-        .roulette-item { width: 100px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; border-right: 1px solid rgba(255,255,255,0.1); }
-        .roulette-item svg { width: 40px; height: 40px; }
-        .roulette-line { position: absolute; left: 50%; top: 0; width: 2px; height: 100%; background: red; z-index: 10; transform: translateX(-50%); box-shadow: 0 0 10px red; }
+        .roulette-item { width: 120px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; border-right: 1px solid rgba(255,255,255,0.05); }
+        .roulette-item svg { width: 60px; height: 60px; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5)); }
+        .roulette-line { position: absolute; left: 50%; top: 0; width: 4px; height: 100%; background: var(--danger); z-index: 10; transform: translateX(-50%); box-shadow: 0 0 15px var(--danger); }
 
         .admin-btn { background: linear-gradient(135deg, #fbbf24, #f59e0b) !important; color: #000 !important; font-weight: bold; }
 
@@ -131,7 +173,6 @@
             #back-btn { display: block; }
             .msg-bubble { max-width: 85%; }
             .modal-box { width: 95%; padding: 15px; }
-            .nft-grid { grid-template-columns: repeat(2, 1fr); }
         }
     </style>
 </head>
@@ -181,7 +222,7 @@
                     <div style="display: flex; gap: 10px; justify-content: space-between;" id="upgrade-gifts-grid"></div>
                 </div>
 
-                <h4 style="margin: 0 0 10px 0; color: var(--text-muted);">Коллекция NFT</h4>
+                <h4 style="margin: 0 0 10px 0; color: var(--text-muted); text-align:center;">Коллекция NFT</h4>
                 <div class="nft-grid" id="view-nfts"></div>
                 
                 <div id="other-profile-actions" style="display:flex; gap:10px; margin-top:20px; flex-direction:column;">
@@ -348,7 +389,6 @@
     </div>
 
     <script>
-        // ПЕРЕХВАТЧИК ОШИБОК
         window.onerror = function(message, source, lineno, colno, error) {
             alert("Ошибка JavaScript: " + message + "\nСтрока: " + lineno);
             return false;
@@ -366,11 +406,38 @@
         let viewingUser = null;
         let currentUserBlocked = false;
 
+        // ==========================================
+        // НОВЫЕ ДЕТАЛИЗИРОВАННЫЕ 3D ПОДАРКИ (SVG)
+        // ==========================================
         const GIFTS = {
-            'gift_bear': `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="22" cy="22" r="18" fill="#5D4037"/><circle cx="78" cy="22" r="18" fill="#5D4037"/><circle cx="50" cy="55" r="42" fill="#8D6E63"/><circle cx="30" cy="45" r="8" fill="#212121"/><circle cx="70" cy="45" r="8" fill="#212121"/><ellipse cx="50" cy="65" rx="16" ry="11" fill="#EFEBE9"/><circle cx="50" cy="60" r="7" fill="#212121"/></svg>`,
-            'gift_crown': `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M12 65 L5 15 L35 45 L50 5 L65 45 L95 15 L88 65 Z" fill="#FFC107"/><rect x="12" y="65" width="76" height="20" fill="#FF6F00"/></svg>`,
-            'gift_rose': `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M50 15 C15 15, 5 50, 30 70 C40 80, 50 90, 50 100 C50 90, 60 80, 70 70 C95 50, 85 15, 50 15 Z" fill="#E91E63"/><path d="M50 85 L50 110" stroke="#1B5E20" stroke-width="8"/></svg>`,
-            'gift_diamond': `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><polygon points="50,5 95,40 50,95 5,40" fill="#00BCD4"/></svg>`
+            'gift_bear': `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <defs><radialGradient id="fur" cx="30%" cy="30%" r="70%"><stop offset="0%" stop-color="#A1887F"/><stop offset="60%" stop-color="#5D4037"/><stop offset="100%" stop-color="#3E2723"/></radialGradient></defs>
+                <circle cx="22" cy="22" r="18" fill="#3E2723"/><circle cx="22" cy="22" r="10" fill="#8D6E63"/>
+                <circle cx="78" cy="22" r="18" fill="#3E2723"/><circle cx="78" cy="22" r="10" fill="#8D6E63"/>
+                <circle cx="50" cy="55" r="42" fill="url(#fur)"/>
+                <circle cx="30" cy="45" r="8" fill="#212121"/><circle cx="32" cy="43" r="2" fill="white"/>
+                <circle cx="70" cy="45" r="8" fill="#212121"/><circle cx="72" cy="43" r="2" fill="white"/>
+                <ellipse cx="50" cy="65" rx="16" ry="11" fill="#EFEBE9"/>
+                <circle cx="50" cy="60" r="7" fill="#212121"/><circle cx="48" cy="58" r="2" fill="white"/>
+            </svg>`,
+            'gift_crown': `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <defs><linearGradient id="gold" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#FFF59D"/><stop offset="50%" stop-color="#FFC107"/><stop offset="100%" stop-color="#FF6F00"/></linearGradient></defs>
+                <path d="M12 65 L5 15 L35 45 L50 5 L65 45 L95 15 L88 65 Z" fill="url(#gold)"/>
+                <rect x="12" y="65" width="76" height="20" fill="#E65100"/>
+                <circle cx="50" cy="20" r="6" fill="#F44336"/><circle cx="18" cy="30" r="4" fill="#2196F3"/><circle cx="82" cy="30" r="4" fill="#2196F3"/>
+            </svg>`,
+            'gift_rose': `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <defs><radialGradient id="rose" cx="30%" cy="30%" r="70%"><stop offset="0%" stop-color="#FF80AB"/><stop offset="100%" stop-color="#C2185B"/></radialGradient></defs>
+                <path d="M50 15 C15 15, 5 50, 30 70 C40 80, 50 90, 50 100 C50 90, 60 80, 70 70 C95 50, 85 15, 50 15 Z" fill="url(#rose)"/>
+                <path d="M50 85 L50 110" stroke="#1B5E20" stroke-width="6"/>
+                <path d="M50 95 Q30 90 25 100" stroke="#4CAF50" stroke-width="4" fill="none"/>
+            </svg>`,
+            'gift_diamond': `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <defs><linearGradient id="dia" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#E0FFFF"/><stop offset="50%" stop-color="#00BCD4"/><stop offset="100%" stop-color="#006064"/></linearGradient></defs>
+                <polygon points="50,5 95,40 50,95 5,40" fill="url(#dia)"/>
+                <polygon points="50,5 70,40 50,95 30,40" fill="#80DEEA" opacity="0.6"/>
+                <line x1="5" y1="40" x2="95" y2="40" stroke="#E0FFFF" stroke-width="2"/>
+            </svg>`
         };
         
         const coinSvg = `<svg class="coin-icon" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="url(#paint0_linear)"/><circle cx="12" cy="12" r="8" stroke="#B45309" stroke-width="1.5"/><path d="M9 16V8H12.5C14.433 8 16 9.119 16 11C16 12.881 14.433 14 12.5 14H11V16H9ZM11 12H12.5C13.3284 12 14 11.552 14 11C14 10.448 13.3284 10 12.5 10H11V12Z" fill="#78350F"/><defs><linearGradient id="paint0_linear" x1="12" y1="2" x2="12" y2="22" gradientUnits="userSpaceOnUse"><stop stop-color="#FDE047"/><stop offset="1" stop-color="#EAB308"/></linearGradient></defs></svg>`;
@@ -450,7 +517,6 @@
             const shopBal = document.getElementById('shop-balance');
             if(shopBal) shopBal.innerText = myUser.coins;
             
-            // ОБНОВЛЯЕМ БАЛАНС В ОТКРЫТОМ ПРОФИЛЕ
             const viewBal = document.getElementById('view-balance');
             if(viewBal && viewingUser === myUser.username) {
                 viewBal.innerText = myUser.coins + ' R';
@@ -484,8 +550,10 @@
             const shopGrid = document.getElementById('shop-grid');
             Object.keys(GIFTS).forEach(key => {
                 const div = document.createElement('div');
-                div.style = "background:var(--bg-main); padding:15px; border-radius:12px; text-align:center; cursor:pointer; border:1px solid var(--border);";
-                div.innerHTML = `${GIFTS[key].replace('<svg', '<svg style="width:60px;height:60px;"')}<div style="color:var(--gold); font-weight:bold; margin-top:10px;">${key==='gift_bear'?100:key==='gift_crown'?500:key==='gift_diamond'?50:10} R</div>`;
+                div.style = "background:var(--bg-main); padding:15px; border-radius:12px; text-align:center; cursor:pointer; border:1px solid var(--border); transition:0.2s;";
+                div.onmouseover = () => div.style.transform = "scale(1.05)";
+                div.onmouseout = () => div.style.transform = "scale(1)";
+                div.innerHTML = `${GIFTS[key].replace('<svg', '<svg style="width:60px;height:60px;filter:drop-shadow(0 5px 5px rgba(0,0,0,0.5));"')}<div style="color:var(--gold); font-weight:bold; margin-top:10px;">${key==='gift_bear'?100:key==='gift_crown'?500:key==='gift_diamond'?50:10} R</div>`;
                 div.onclick = () => buyGift(key, key==='gift_bear'?100:key==='gift_crown'?500:key==='gift_diamond'?50:10);
                 shopGrid.appendChild(div);
             });
@@ -609,8 +677,10 @@
                         upGrid.innerHTML = '';
                         Object.keys(GIFTS).forEach(key => {
                             const div = document.createElement('div');
-                            div.style = "cursor:pointer; background:var(--bg-main); padding:10px; border-radius:10px; text-align:center; border:1px solid var(--border); flex:1;";
-                            div.innerHTML = `${GIFTS[key].replace('<svg', '<svg style="width:40px;height:40px;"')}<div style="font-size:10px; margin-top:5px; color:var(--gold);">1000 R</div>`;
+                            div.style = "cursor:pointer; background:var(--bg-main); padding:10px; border-radius:10px; text-align:center; border:1px solid var(--border); flex:1; transition:0.2s;";
+                            div.onmouseover = () => div.style.borderColor = "var(--gold)";
+                            div.onmouseout = () => div.style.borderColor = "var(--border)";
+                            div.innerHTML = `${GIFTS[key].replace('<svg', '<svg style="width:40px;height:40px;"')}<div style="font-size:10px; margin-top:5px; color:var(--gold); font-weight:bold;">1000 R</div>`;
                             div.onclick = () => openRoulette(key);
                             upGrid.appendChild(div);
                         });
@@ -642,7 +712,7 @@
                 if (data.type === 'user_nfts') {
                     const grid = document.getElementById('view-nfts');
                     grid.innerHTML = '';
-                    if(data.nfts.length === 0) grid.innerHTML = '<p style="color:var(--text-muted); font-size:12px; grid-column: 1 / -1;">Пока нет NFT</p>';
+                    if(data.nfts.length === 0) grid.innerHTML = '<p style="color:var(--text-muted); font-size:12px; grid-column: 1 / -1; text-align:center;">Пока нет NFT</p>';
                     data.nfts.forEach(nft => {
                         grid.innerHTML += renderNftCard(nft, false);
                     });
@@ -651,7 +721,7 @@
                 if (data.type === 'marketplace_data') {
                     const grid = document.getElementById('market-grid');
                     grid.innerHTML = '';
-                    if(data.items.length === 0) grid.innerHTML = '<p style="color:var(--text-muted); font-size:12px; grid-column: 1 / -1;">Маркетплейс пуст</p>';
+                    if(data.items.length === 0) grid.innerHTML = '<p style="color:var(--text-muted); font-size:12px; grid-column: 1 / -1; text-align:center;">Маркетплейс пуст</p>';
                     data.items.forEach(nft => {
                         grid.innerHTML += renderNftCard(nft, true);
                     });
@@ -688,33 +758,50 @@
                     closeModal('group-overlay');
                 }
                 if (data.type === 'admin_success') {
-                    alert(data.message); // Всплывающее окно при начислении
-                    openMyProfile(); // Обновляем профиль, чтобы увидеть новые коины
+                    alert(data.message); 
+                    openMyProfile(); 
                 }
                 if (data.type === 'error') alert(data.message);
             };
         }
 
+        // ==========================================
+        // НОВЫЙ РЕНДЕР NFT КАРТОЧЕК (С ГОЛОГРАММОЙ)
+        // ==========================================
         function renderNftCard(nft, isMarket = false) {
             const baseSvg = GIFTS[nft.base_type] || GIFTS['gift_bear'];
-            const rarityColors = { 'Common': '#7f91a4', 'Rare': '#5eb5f7', 'Epic': '#db2777', 'Legendary': '#fbbf24' };
-            const color = rarityColors[nft.rarity] || '#fff';
+            
+            // Цвета для градиента голограммы
+            const rarityGradients = {
+                'Common': 'linear-gradient(45deg, #4B5563, #9CA3AF, #4B5563)',
+                'Rare': 'linear-gradient(45deg, #1E3A8A, #3B82F6, #1E3A8A)',
+                'Epic': 'linear-gradient(45deg, #4C1D95, #8B5CF6, #4C1D95)',
+                'Legendary': 'linear-gradient(45deg, #78350F, #F59E0B, #78350F)'
+            };
+            
+            const bgGradient = rarityGradients[nft.rarity] || rarityGradients['Common'];
+            const borderColor = { 'Common': '#9CA3AF', 'Rare': '#3B82F6', 'Epic': '#8B5CF6', 'Legendary': '#F59E0B' }[nft.rarity] || '#fff';
             
             let buyBtn = '';
             if (isMarket) {
-                buyBtn = `<button onclick="buyNft('${nft.id}', ${nft.price})" style="width:100%; padding:5px; margin-top:5px; background:var(--gold); color:black; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">Купить</button>`;
+                buyBtn = `<button onclick="buyNft('${nft.id}', ${nft.price})" style="width:100%; padding:8px; margin-top:10px; background:var(--gold); color:black; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Купить за ${nft.price} R</button>`;
             } else {
-                buyBtn = `<button onclick="listNft('${nft.id}')" style="width:100%; padding:5px; margin-top:5px; background:var(--accent); color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">Продать</button>`;
+                buyBtn = `<button onclick="listNft('${nft.id}')" style="width:100%; padding:8px; margin-top:10px; background:rgba(255,255,255,0.1); color:white; border:1px solid rgba(255,255,255,0.2); border-radius:8px; font-weight:bold; cursor:pointer;">Продать</button>`;
             }
 
             return `
-                <div class="nft-card" style="border-color: ${color};">
-                    <div class="nft-bg" style="background: ${nft.color}"></div>
+                <div class="nft-card" style="border-color: ${borderColor};">
+                    <!-- Голографический фон -->
+                    <div class="nft-bg" style="background: ${bgGradient};"></div>
+                    
+                    <!-- Подарок (SVG) -->
                     ${baseSvg}
+                    
+                    <!-- Информация -->
                     <div class="nft-info">
-                        <div class="nft-rarity" style="color: ${color};">${nft.rarity}</div>
-                        <div class="nft-num">#${nft.num}</div>
-                        ${isMarket ? `<div style="font-size:12px; color:var(--gold); margin-top:3px;">${nft.price} R</div>` : ''}
+                        <div class="nft-rarity" style="color: ${borderColor};">${nft.rarity}</div>
+                        <div class="nft-num">#${nft.num} / 999</div>
+                        ${!isMarket ? `<div class="nft-price-badge">Владелец</div>` : ''}
                         ${buyBtn}
                     </div>
                 </div>
@@ -734,7 +821,7 @@
             for(let i=0; i<50; i++) {
                 const rarities = ['Common', 'Rare', 'Epic', 'Legendary'];
                 const randomR = rarities[Math.floor(Math.random() * rarities.length)];
-                const svg = GIFTS[baseType].replace('<svg', `<svg style="filter: drop-shadow(0 0 5px ${randomR==='Legendary'?'#fbbf24':'transparent'});"`);
+                const svg = GIFTS[baseType].replace('<svg', `<svg style="filter: drop-shadow(0 0 10px ${randomR==='Legendary'?'#fbbf24':randomR==='Epic'?'#8B5CF6':'transparent'});"`);
                 strip.innerHTML += `<div class="roulette-item">${svg}</div>`;
             }
         }
