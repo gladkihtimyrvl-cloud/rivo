@@ -41,9 +41,6 @@
         .search-container { position: relative; margin: 5px 15px 15px; }
         #search-input { width: 100%; padding: 10px 35px 10px 15px; border-radius: 20px; border: none; background: var(--bg-input); color: white; outline: none; font-size: 14px; }
 
-        #ptr-indicator { height: 0; overflow: hidden; text-align: center; color: var(--text-muted); transition: height 0.2s, padding 0.2s; font-size: 14px; display: flex; justify-content: center; align-items: center; }
-        .spinner { width: 20px; height: 20px; border: 2px solid var(--text-muted); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; display: none; }
-
         #chat-list { flex: 1; overflow-y: auto; }
         .chat-item { padding: 10px 15px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: 0.1s; }
         .chat-item:hover { background: var(--bg-input); }
@@ -116,6 +113,12 @@
         .card-title { font-size: 11px; font-weight: 600; color: white; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
         .card-rarity { font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; }
 
+        /* Магазин */
+        .shop-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; }
+        .shop-tab { padding: 10px 20px; background: var(--bg-main); border: 1px solid var(--border); color: var(--text-muted); border-radius: 20px; cursor: pointer; transition: 0.2s; font-weight: 600; }
+        .shop-tab.active { background: var(--accent); color: white; border-color: var(--accent); }
+        .shop-upgrade-badge { position: absolute; top: 5px; right: 5px; background: var(--gold); color: black; font-size: 8px; font-weight: bold; padding: 2px 5px; border-radius: 5px; }
+
         /* Модалка деталей */
         .detail-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 14px; }
         .detail-label { color: var(--text-muted); }
@@ -153,7 +156,7 @@
             
             <div style="text-align: left; margin-bottom: 20px;">
                 <div class="detail-row"><span class="detail-label">Владелец</span><span class="detail-value" id="detail-owner">-</span></div>
-                <div class="detail-row"><span class="detail-label">Модель</span><span class="detail-value" id="detail-model">-</span></div>
+                <div class="detail-row"><span class="detail-label">Модель (Цвет)</span><span class="detail-value" id="detail-model">-</span></div>
                 <div class="detail-row"><span class="detail-label">Фон</span><span class="detail-value" id="detail-bg">-</span></div>
                 <div class="detail-row"><span class="detail-label">Узор</span><span class="detail-value" id="detail-pattern">-</span></div>
                 <div class="detail-row"><span class="detail-label">Номер</span><span class="detail-value" id="detail-num">-</span></div>
@@ -185,7 +188,7 @@
                 <div style="display:flex; gap:10px; padding: 15px;">
                     <div class="tg-info-block" style="flex:1; margin:0;">
                         <div class="tg-info-label">ID</div>
-                        <div class="tg-info-value" id="view-id"></div>
+                        <div class="tg-info-value" id="view-id"></div> <!-- 6-значный ID -->
                     </div>
                     <div class="tg-info-block" style="flex:1; margin:0; border-color: rgba(251,191,36,0.3);">
                         <div class="tg-info-label" style="color: var(--gold);">Баланс</div>
@@ -225,6 +228,12 @@
             <div style="text-align:center; color:var(--gold); margin-bottom:15px; font-weight:bold;">
                 Баланс: <span id="shop-balance">0</span> R
             </div>
+            
+            <div class="shop-tabs">
+                <div class="shop-tab active" id="tab-regular" onclick="switchShopTab('regular')">Обычные</div>
+                <div class="shop-tab" id="tab-upgradeable" onclick="switchShopTab('upgradeable')">Для NFT</div>
+            </div>
+
             <div class="grid-container" id="shop-grid"></div>
             <button onclick="closeModal('shop-overlay')" style="margin-top:20px; background:var(--bg-input);">Закрыть</button>
         </div>
@@ -243,7 +252,7 @@
     <div id="roulette-overlay" class="modal-overlay hidden">
         <div class="modal-box">
             <h2>Улучшить до NFT</h2>
-            <p style="text-align:center; color:var(--text-muted); font-size:14px;">Стоимость: <b style="color:var(--gold);">Бесплатно (1 шт)</b></p>
+            <p style="text-align:center; color:var(--text-muted); font-size:14px;">Стоимость: <b style="color:var(--gold);">1 000 R</b></p>
             
             <div id="upgrade-preview" style="text-align:center; margin: 20px 0;"></div>
 
@@ -314,7 +323,7 @@
             <div class="sidebar-header">
                 <div class="menu-btn" onclick="openMyProfile()">☰</div>
                 <div style="font-weight:bold; font-size:18px;">Rivo</div>
-                <div class="menu-btn" onclick="openMarket()">🛒</div>
+                <div class="menu-btn" onclick="openMarket()">🛒</div> <!-- МАРКЕТПЛЕЙС -->
             </div>
             <div class="search-container"><input type="text" id="search-input" placeholder="Поиск..." oninput="renderChats()"></div>
             <div id="chat-list"></div>
@@ -340,34 +349,49 @@
     </div>
 
     <script>
-        // ГЛОБАЛЬНЫЙ ПЕРЕХВАТ ОШИБОК
         window.onerror = function(m, s, l) { alert("Ошибка: " + m + " (Строка: " + l + ")"); return false; };
 
         let ws, myUser = null, isLoginMode = true;
         let allUsers = [], myContacts = [], myGroups = [], unreadMessages = {};
         let selectedAvatarBase64 = "", viewingUser = null, currentChatId = null, currentChatType = null;
         let currentUpgradeBase = null;
+        let currentShopTab = 'regular'; // 'regular' или 'upgradeable'
 
+        // ==========================================
+        // КАТАЛОГ ПОДАРКОВ (СТРОГО ПО ТЗ)
+        // ==========================================
         const GIFT_CATALOG = {
-            'gift_rose': { name: 'Роза', price: 100, rarity: 'Common', emoji: '🌹' },
-            'gift_bear': { name: 'Мишка', price: 1000, rarity: 'Uncommon', emoji: '🧸' },
-            'gift_diamond': { name: 'Алмаз', price: 5000, rarity: 'Rare', emoji: '💎' },
-            'gift_crown': { name: 'Корона', price: 25000, rarity: 'Epic', emoji: '👑' },
-            'gift_pepe': { name: 'Plush Pepe', price: 100000, rarity: 'Legendary', emoji: '🐸' }
+            // Обычные
+            'teddy_bear': { name: 'Teddy Bear', price: 100, rarity: 'Common', emoji: '🧸', upgradeable: false },
+            'heart': { name: 'Heart', price: 250, rarity: 'Common', emoji: '❤️', upgradeable: false },
+            'rose': { name: 'Rose', price: 400, rarity: 'Uncommon', emoji: '🌹', upgradeable: false },
+            'crown': { name: 'Crown', price: 650, rarity: 'Rare', emoji: '👑', upgradeable: false },
+            'golden_star': { name: 'Golden Star', price: 900, rarity: 'Epic', emoji: '⭐', upgradeable: false },
+            // Улучшаемые
+            'diamond': { name: 'Diamond', price: 2000, rarity: 'Rare', emoji: '💎', upgradeable: true },
+            'golden_dragon': { name: 'Golden Dragon', price: 3500, rarity: 'Epic', emoji: '🐉', upgradeable: true },
+            'royal_crown': { name: 'Royal Crown', price: 5000, rarity: 'Epic', emoji: '👑', upgradeable: true },
+            'cosmic_orb': { name: 'Cosmic Orb', price: 7500, rarity: 'Legendary', emoji: '🔮', upgradeable: true },
+            'phoenix': { name: 'Phoenix', price: 10000, rarity: 'Legendary', emoji: '🦅', upgradeable: true }
         };
         
         const rarityColors = { 'Common': '#9CA3AF', 'Uncommon': '#10B981', 'Rare': '#3B82F6', 'Epic': '#8B5CF6', 'Legendary': '#F59E0B' };
         
         const bgColors = {
-            'Cosmic': '#1E1B4B', 'Starry': '#0F172A', 'Electric Purple': '#4C1D95', 
-            'Grape': '#3B0764', 'Golden': '#78350F', 'Fire': '#7F1D1D', 'Ice': '#164E63', 'Rainbow': '#831843'
+            'Dark Space': '#0F172A', 'Blue Ocean': '#164E63', 'Purple Galaxy': '#4C1D95', 
+            'Emerald Forest': '#064E3B', 'Golden Sunset': '#78350F', 'Crimson Fire': '#7F1D1D', 
+            'Pink Dream': '#831843', 'Rainbow Light': '#8B5CF6'
         };
         
         const patternCSS = {
-            'None': 'none', 'Stars': 'radial-gradient(circle, white 10%, transparent 11%)',
+            'Stars': 'radial-gradient(circle, white 10%, transparent 11%)',
+            'Geometry': 'linear-gradient(45deg, transparent 45%, rgba(255,255,255,0.2) 45%, rgba(255,255,255,0.2) 55%, transparent 55%)',
+            'Lightning': 'repeating-linear-gradient(0deg, transparent, transparent 20px, rgba(255,255,255,0.1) 20px, rgba(255,255,255,0.1) 21px)',
             'Waves': 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.1) 10px, rgba(255,255,255,0.1) 20px)',
-            'Toilet': 'repeating-radial-gradient(circle, transparent, transparent 5px, rgba(255,255,255,0.2) 5px, rgba(255,255,255,0.2) 10px)',
-            'Hexagon': 'conic-gradient(from 90deg at 50% 50%, transparent 90deg, rgba(255,255,255,0.1) 0 180deg)'
+            'Crystals': 'conic-gradient(from 90deg at 50% 50%, transparent 90deg, rgba(255,255,255,0.1) 0 180deg)',
+            'Circles': 'repeating-radial-gradient(circle, transparent, transparent 10px, rgba(255,255,255,0.1) 10px, rgba(255,255,255,0.1) 20px)',
+            'Hexagons': 'repeating-linear-gradient(60deg, transparent, transparent 10px, rgba(255,255,255,0.1) 10px, rgba(255,255,255,0.1) 20px)',
+            'Abstract': 'none'
         };
 
         function closeModal(id) {
@@ -400,16 +424,40 @@
             }; r.readAsDataURL(f);
         }
 
-        window.onload = () => {
+        function switchShopTab(tab) {
+            currentShopTab = tab;
+            document.getElementById('tab-regular').classList.toggle('active', tab === 'regular');
+            document.getElementById('tab-upgradeable').classList.toggle('active', tab === 'upgradeable');
+            renderShop();
+        }
+
+        function renderShop() {
             const sg = document.getElementById('shop-grid'); if(!sg) return;
+            sg.innerHTML = '';
+            
             Object.keys(GIFT_CATALOG).forEach(k => {
                 const g = GIFT_CATALOG[k];
+                if (currentShopTab === 'regular' && g.upgradeable) return;
+                if (currentShopTab === 'upgradeable' && !g.upgradeable) return;
+
                 const d = document.createElement('div');
                 d.className = 'gift-card';
-                d.innerHTML = `<div style="font-size:40px; margin-bottom:5px;">${g.emoji}</div><div class="card-title">${g.name}</div><div class="card-rarity" style="color:${rarityColors[g.rarity]};">${g.rarity}</div><div style="color:var(--gold); font-weight:bold; font-size:14px; margin-top:5px;">${g.price} R</div>`;
+                let upgradeBadge = g.upgradeable ? `<div class="shop-upgrade-badge">До NFT</div>` : '';
+                
+                d.innerHTML = `
+                    ${upgradeBadge}
+                    <div style="font-size:40px; margin-bottom:5px;">${g.emoji}</div>
+                    <div class="card-title">${g.name}</div>
+                    <div class="card-rarity" style="color:${rarityColors[g.rarity]};">${g.rarity}</div>
+                    <div style="color:var(--gold); font-weight:bold; font-size:14px; margin-top:5px;">${g.price} R</div>
+                `;
                 d.onclick = () => buyGift(k, g.price);
                 sg.appendChild(d);
             });
+        }
+
+        window.onload = () => {
+            renderShop();
 
             const savedUser = localStorage.getItem('rivo_user');
             const savedPass = localStorage.getItem('rivo_pass');
@@ -451,13 +499,14 @@
                 if(data.type === 'chat_list') { myContacts = data.contacts; renderChats(); }
                 if(data.type === 'my_groups') { myGroups = data.groups; renderChats(); }
                 
+                // === ПРОФИЛЬ (ТЕЛЕГРАМ СТИЛЬ) ===
                 if (data.type === 'profile_data') {
                     const usr = data.user; viewingUser = usr.username;
                     document.getElementById('view-avatar').innerHTML = usr.avatar ? `<img src="${usr.avatar}">` : '👤';
                     document.getElementById('view-name').innerText = usr.display_name;
                     document.getElementById('view-username').innerText = '@' + usr.username;
                     document.getElementById('view-bio').innerText = usr.bio || '';
-                    document.getElementById('view-id').innerText = usr.six_digit_id;
+                    document.getElementById('view-id').innerText = usr.six_digit_id; // 6-значный ID
                     document.getElementById('view-balance').innerText = usr.coins + ' R';
 
                     if (usr.username === myUser.username) {
@@ -483,7 +532,14 @@
                         const d = document.createElement('div');
                         d.className = 'gift-card';
                         d.innerHTML = `<div style="font-size:30px; margin-bottom:5px;">${g.emoji}</div><div class="card-title">${g.name}</div><div style="font-size:10px; color:var(--text-muted);">x${item.quantity}</div>`;
-                        d.onclick = () => openRoulette(item.gift_id);
+                        
+                        if (g.upgradeable) {
+                            const btn = document.createElement('button');
+                            btn.innerText = "Улучшить";
+                            btn.style = "margin-top:5px; padding:5px; font-size:10px; background:var(--gold); color:black; border:none; border-radius:5px; width:100%; cursor:pointer;";
+                            btn.onclick = (e) => { e.stopPropagation(); openRoulette(item.gift_id); };
+                            d.appendChild(btn);
+                        }
                         invGrid.appendChild(d);
                     });
                 }
@@ -520,6 +576,7 @@
                     document.getElementById('roulette-result').classList.remove('hidden');
                     document.getElementById('result-rarity').innerText = `${data.nft.rarity} #${data.nft.num}`;
                     document.getElementById('result-rarity').style.color = rarityColors[data.nft.rarity];
+                    myUser.coins = data.newBalance; updateBalanceUI();
                     setTimeout(() => { closeModal('roulette-overlay'); openMyProfile(); }, 2000);
                 }
 
@@ -529,6 +586,7 @@
                 if (data.type === 'admin_success') { alert(data.message); openMyProfile(); }
                 if (data.type === 'error') alert(data.message);
                 
+                // === МАРКЕТПЛЕЙС ===
                 if (data.type === 'marketplace_data') {
                     const mg = document.getElementById('market-grid'); mg.innerHTML = '';
                     data.items.forEach(nft => {
@@ -675,7 +733,7 @@
 
         function openUserProfile(u) { ws.send(JSON.stringify({ type: 'get_profile', target: u })); }
         function openMyProfile() { ws.send(JSON.stringify({ type: 'get_profile', target: myUser.username })); }
-        function openMarket() { ws.send(JSON.stringify({ type: 'get_marketplace' })); }
+        function openMarket() { ws.send(JSON.stringify({ type: 'get_marketplace' })); } // Открытие маркетплейса
         function openShop() { if(currentChatId) document.getElementById('shop-overlay').classList.remove('hidden', 'animate-out'); }
         function openSettings() {
             closeModal('profile-view-overlay');
